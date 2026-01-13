@@ -91,18 +91,21 @@
 <body>
 
     <nav class="navbar">
-        <a href="index.html"><img src="../assets/logo.png" style="height:40px;" alt="MSP"></a>
+        <a href="../viewer/index.php">
+            <img src="../assets/logo.png" style="height:40px;" alt="MSP">
+        </a>
     </nav>
 
     <div class="auth-container">
+        
         <div id="login-form">
             <h2>Sign In</h2>
-            <form onsubmit="handleAuth(event)">
+            <form action="../actions/login_process.php" method="POST">
                 <div class="input-group">
-                    <input type="email" placeholder="Email address" required>
+                    <input type="email" name="email" placeholder="Email address" required>
                 </div>
                 <div class="input-group">
-                    <input type="password" placeholder="Password" required>
+                    <input type="password" name="password" placeholder="Password" required>
                 </div>
                 <button type="submit" class="btn-auth">Sign In</button>
                 <div class="help-flex">
@@ -117,15 +120,20 @@
 
         <div id="register-form">
             <h2>Sign Up</h2>
-            <form onsubmit="handleAuth(event)">
+            <form action="../actions/register_viewer.php" method="POST">
                 <div class="input-group">
-                    <input type="text" placeholder="Full Name" required>
+                    <input type="text" name="full_name" placeholder="Full Name" required>
+                </div>
+                
+                <div class="input-group">
+                    <input type="text" name="username" placeholder="Username" required>
+                </div>
+
+                <div class="input-group">
+                    <input type="email" name="email" placeholder="Email address" required>
                 </div>
                 <div class="input-group">
-                    <input type="email" placeholder="Email address" required>
-                </div>
-                <div class="input-group">
-                    <input type="password" placeholder="Create Password" required>
+                    <input type="password" name="password" placeholder="Create Password" required>
                 </div>
                 <button type="submit" class="btn-auth">Get Started</button>
             </form>
@@ -147,23 +155,6 @@
                 login.style.display = "none";
                 register.style.display = "block";
             }
-        }
-
-        function handleAuth(e) {
-            e.preventDefault();
-            
-            const isRegister = document.getElementById('register-form').style.display === "block";
-            let displayName = "";
-
-            if (isRegister) {
-                displayName = e.target.querySelector('input[type="text"]').value;
-            } else {
-                const email = e.target.querySelector('input[type="email"]').value;
-                displayName = email.split('@')[0]; 
-            }
-
-            localStorage.setItem('username', displayName);
-            window.location.href = "index.html";
         }
     </script>
 </body>

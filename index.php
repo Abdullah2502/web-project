@@ -1,3 +1,32 @@
+<?php
+session_start();
+include './config/db_connect.php';
+
+// --- 1. SECURITY CHECK ---
+// If the user is not logged in, redirect to the login page
+if (!isset($_SESSION['user_id'])) {
+    header("Location: auth.php");
+    exit();
+}
+
+// --- 2. FETCH USER DETAILS ---
+$user_id = $_SESSION['user_id'];
+$username = $_SESSION['username']; // Retrieved from session set during login
+$is_premium = false;
+
+// Check the 'viewers' table to see if they are Premium
+// (We use proper error checking just in case)
+$sql = "SELECT subscription_plan FROM viewers WHERE user_id = '$user_id'";
+if ($result = $conn->query($sql)) {
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        if ($row['subscription_plan'] === 'premium') {
+            $is_premium = true;
+        }
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -52,7 +81,7 @@
         .nav-icons {display:flex; gap:20px; font-size:18px; align-items: center; color:#ccc;}
         .logo-img {height:35px;}
         
-        /* SEARCH BAR INSIDE NAV (NEW) */
+        /* SEARCH BAR INSIDE NAV */
         .search-container {
             display: flex;
             align-items: center;
@@ -94,7 +123,9 @@
             overflow: hidden;
             min-width: 140px;
         }
-        .logout-dropdown button {
+        /* Updated to style links inside dropdown */
+        .logout-dropdown button, .logout-dropdown a {
+            display: block;
             background: none;
             border: none;
             color: var(--text-main);
@@ -104,8 +135,9 @@
             text-align: left;
             font-size: 14px;
             transition: 0.3s;
+            text-decoration: none; /* For the anchor tag */
         }
-        .logout-dropdown button:hover { background: #e50914; color: white; }
+        .logout-dropdown button:hover, .logout-dropdown a:hover { background: #e50914; color: white; }
 
         /* THEME TOGGLE ICON */
         #theme-toggle { cursor: pointer; transition: 0.3s; }
@@ -170,13 +202,13 @@
 <body>
 
     <nav class="navbar">
-        <div style="font-size: 30px;"><img src="assets/logo.png" class="logo-img"></div>
+        <div style="font-size: 30px;"><img src="../assets/logo.png" class="logo-img"></div>
         <ul class="nav-links">
-            <li><a href="index.html" class="active">Home</a></li>
-            <li><a href="movie.html">Movies</a></li>
-            <li><a href="series.html">Series</a></li>
-            <li><a href="forum.html">Forum</a></li>
-            <li><a href="subscription.html">Subscribe</a></li>
+            <li><a href="index.php" class="active">Home</a></li>
+            <li><a href="movie.php">Movies</a></li>
+            <li><a href="series.php">Series</a></li>
+            <li><a href="forum.php">Forum</a></li>
+            <li><a href="subscription.php">Subscribe</a></li>
         </ul>
         <div class="nav-icons">
             <div class="search-container">
@@ -186,11 +218,18 @@
             <i class="fa-regular fa-bell"></i>
             
             <div class="user-container" id="userArea">
-                <span id="user-display-name"></span>
+                <span id="user-display-name" style="<?php echo $is_premium ? 'color: #FFD700;' : ''; ?>">
+                    <?php echo htmlspecialchars($username); ?>
+                    <?php if($is_premium): ?>
+                        <i class="fa-solid fa-crown" style="font-size: 10px; margin-left: 4px;"></i>
+                    <?php endif; ?>
+                </span>
+
                 <i class="fa-solid fa-circle-user"></i>
+                
                 <div class="logout-dropdown" id="logoutDropdown">
-                    <button onclick="window.location.href='userDashboard.html'">Dashboard</button>
-                    <button id="logoutBtn">Log Out</button>
+                    <button onclick="window.location.href='userDashboard.php'">Dashboard</button>
+                    <a href="../actions/logout.php">Log Out</a>
                 </div>
             </div>
 
@@ -208,7 +247,7 @@
         <div class="hero-content">
             <h1 class="hero-title">The Witcher</h1>
             <p class="hero-desc">Geralt of Rivia, a mutated monster-hunter for hire, journeys toward his destiny.</p>
-            <button class="btn-watch" onclick="window.location.href='movie.html'">Watch Now</button>
+            <button class="btn-watch" onclick="window.location.href='movie.php'">Watch Now</button>
         </div>
     </header>
 
@@ -351,41 +390,18 @@
                 themeToggle.classList.replace('fa-moon', 'fa-sun');
             }
 
-            // 1. LOGIC FOR AUTH / LOGOUT / PREMIUM STATUS
-            const username = localStorage.getItem('username');
-            const globalEmail = localStorage.getItem('globalUserEmail'); 
-            const membership = localStorage.getItem('membership');
-            
+            // --- DROPDOWN & INTERACTION LOGIC (Simplified for PHP) ---
             const userArea = document.getElementById('userArea');
-            const userDisplayName = document.getElementById('user-display-name');
             const logoutDropdown = document.getElementById('logoutDropdown');
-            const logoutBtn = document.getElementById('logoutBtn');
 
-            const activeUser = globalEmail || username;
-
-            if (activeUser) {
-                userDisplayName.textContent = activeUser;
-                if (membership === 'premium') {
-                    userDisplayName.style.color = "#FFD700";
-                    userDisplayName.innerHTML += ' <i class="fa-solid fa-crown" style="font-size: 10px; margin-left: 4px;"></i>';
+            userArea.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (logoutDropdown.style.display === 'block') {
+                    logoutDropdown.style.display = 'none';
+                } else {
+                    logoutDropdown.style.display = 'block';
                 }
-
-                userArea.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    logoutDropdown.style.display = (logoutDropdown.style.display === 'block') ? 'none' : 'block';
-                });
-
-                logoutBtn.addEventListener('click', function() {
-                    localStorage.removeItem('username');
-                    localStorage.removeItem('globalUserEmail');
-                    localStorage.removeItem('membership');
-                    window.location.href = 'index.html'; 
-                });
-            } else {
-                userArea.addEventListener('click', function() {
-                    window.location.href = 'auth.html';
-                });
-            }
+            });
 
             document.addEventListener('click', function() {
                 logoutDropdown.style.display = 'none';
