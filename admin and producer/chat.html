@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat - Messenger</title>
+    <link rel="stylesheet" href="Dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="theme.js"></script>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="Dashboard.html" class="logo-btn hover-glow">
+                <img src="logo.png" alt="Logo" class="logo-img">
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="Dashboard.html" class="hover-glow">Dashboard</a></li>
+                <li><a href="Users.html" class="hover-glow">Users</a></li>
+                <li><a href="Movies.html" class="hover-glow">Movies</a></li>
+                <li><a href="Series.html" class="hover-glow">Series</a></li>
+                <li><a href="Wallet.html" class="hover-glow">Wallet</a></li>
+                <li><a href="forum.html" class="hover-glow">Forum</a></li>
+                <li><a href="chat.html" class="hover-glow" style="color:#228EE5;">Chat</a></li>
+            </ul>
+
+            <div class="nav-icons">
+                <div class="search-container">
+                    <input type="text" id="navSearch" class="search-input-nav" placeholder="Type to search...">
+                    <button class="icon-btn hover-glow search-btn-nav" onclick="toggleSearch()">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                </div>
+                
+                <div class="notification-wrapper">
+                    <button class="icon-btn hover-glow" onclick="toggleNotifications()">
+                        <i class="fa-solid fa-bell"></i>
+                        <span style="position:absolute; top:0; right:0; width:8px; height:8px; background:red; border-radius:50%;"></span>
+                    </button>
+                    <div id="notificationDropdown" class="notification-dropdown">
+                        <div class="notification-header">
+                            <span>Notifications</span>
+                            <span class="mark-read">Mark all as read</span>
+                        </div>
+                        <div class="notification-list">
+                            <div class="notif-item">
+                                <div class="notif-content">
+                                    <h4>New Message</h4>
+                                    <p><b>Sarah Connor</b> sent you a photo.</p>
+                                    <span class="notif-time">Just now</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="AdminProfile.html" class="icon-btn hover-glow"><i class="fa-solid fa-user"></i></a>
+                <button class="icon-btn hover-glow"><i class="fa-solid fa-sun"></i></button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <h1 class="welcome-text">Messages</h1>
+
+        <div class="chat-app-container">
+            
+            <div class="chat-sidebar">
+                <div class="chat-sidebar-header">
+                    <h3 style="margin:0;">Chats</h3>
+                    <button class="icon-btn hover-glow"><i class="fa-regular fa-pen-to-square"></i></button>
+                </div>
+                
+                <div class="chat-search">
+                    <input type="text" placeholder="Search contacts...">
+                </div>
+
+                <div class="contact-list">
+                    <div class="contact-item active">
+                        <img src="https://randomuser.me/api/portraits/women/44.jpg" class="contact-avatar">
+                        <div class="contact-info">
+                            <h4>Sarah Connor</h4>
+                            <p>Are we still meeting tomorrow?</p>
+                        </div>
+                    </div>
+
+                    <div class="contact-item">
+                        <img src="https://randomuser.me/api/portraits/men/32.jpg" class="contact-avatar">
+                        <div class="contact-info">
+                            <h4>John Wick</h4>
+                            <p>I need a new pencil.</p>
+                        </div>
+                    </div>
+
+                    <div class="contact-item">
+                        <img src="https://randomuser.me/api/portraits/women/68.jpg" class="contact-avatar">
+                        <div class="contact-info">
+                            <h4>Ellen Ripley</h4>
+                            <p>Check the airlock status.</p>
+                        </div>
+                    </div>
+
+                    <div class="contact-item">
+                        <img src="https://randomuser.me/api/portraits/men/11.jpg" class="contact-avatar">
+                        <div class="contact-info">
+                            <h4>Marty McFly</h4>
+                            <p>This is heavy!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-main">
+                <div class="chat-header">
+                    <div class="chat-user-profile">
+                        <img src="https://randomuser.me/api/portraits/women/44.jpg" class="contact-avatar">
+                        <div>
+                            <h3 style="margin:0; font-size:16px;">Sarah Connor</h3>
+                            <span class="user-status">● Online</span>
+                        </div>
+                    </div>
+                    <div class="nav-icons">
+                        <button class="icon-btn hover-glow"><i class="fa-solid fa-phone"></i></button>
+                        <button class="icon-btn hover-glow"><i class="fa-solid fa-video"></i></button>
+                        <button class="icon-btn hover-glow"><i class="fa-solid fa-circle-info"></i></button>
+                    </div>
+                </div>
+
+                <div class="chat-messages" id="messageContainer">
+                    
+                    <div class="message received">
+                        <div class="message-bubble">
+                            Hey! How is the project coming along?
+                            <span class="msg-time">10:30 AM</span>
+                        </div>
+                    </div>
+
+                    <div class="message sent">
+                        <div class="message-bubble">
+                            It's going great! Just adding the chat feature now.
+                            <span class="msg-time">10:31 AM</span>
+                        </div>
+                    </div>
+
+                    <div class="message received">
+                        <div class="message-bubble">
+                            That sounds awesome. Can't wait to see it!
+                            <span class="msg-time">10:32 AM</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="chat-input-area">
+                    <button class="icon-btn hover-glow"><i class="fa-solid fa-paperclip"></i></button>
+                    <input type="text" id="msgInput" class="chat-input-field" placeholder="Type a message..." onkeypress="handleEnter(event)">
+                    <button class="chat-btn-send" onclick="sendMessage()">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Auto-scroll to bottom on load
+        const msgContainer = document.getElementById('messageContainer');
+        msgContainer.scrollTop = msgContainer.scrollHeight;
+
+        function sendMessage() {
+            const input = document.getElementById('msgInput');
+            const text = input.value.trim();
+
+            if(text === "") return;
+
+            // Create Message HTML
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('message', 'sent');
+            
+            const bubble = document.createElement('div');
+            bubble.classList.add('message-bubble');
+            
+            // Get current time
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            bubble.innerHTML = `${text} <span class="msg-time">${timeString}</span>`;
+            
+            msgDiv.appendChild(bubble);
+            msgContainer.appendChild(msgDiv);
+
+            // Clear Input & Scroll
+            input.value = "";
+            msgContainer.scrollTop = msgContainer.scrollHeight;
+
+            // Optional: Simulate reply after 2 seconds
+            setTimeout(() => {
+                receiveDummyReply();
+            }, 2000);
+        }
+
+        function handleEnter(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function receiveDummyReply() {
+            const replies = [
+                "That's interesting!", 
+                "Okay, got it.", 
+                "Can you send me the details?",
+                "Haha, nice one!",
+                "I'm busy right now, talk later?"
+            ];
+            const randomReply = replies[Math.floor(Math.random() * replies.length)];
+
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('message', 'received');
+            
+            const bubble = document.createElement('div');
+            bubble.classList.add('message-bubble');
+            
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            bubble.innerHTML = `${randomReply} <span class="msg-time">${timeString}</span>`;
+            
+            msgDiv.appendChild(bubble);
+            msgContainer.appendChild(msgDiv);
+            msgContainer.scrollTop = msgContainer.scrollHeight;
+        }
+
+        // --- Navbar Logic (Same as other pages) ---
+        function toggleSearch() {
+            const searchInput = document.getElementById('navSearch');
+            searchInput.classList.toggle('active');
+            if (searchInput.classList.contains('active')) searchInput.focus();
+        }
+
+        function toggleNotifications() {
+            document.getElementById('notificationDropdown').classList.toggle('active');
+        }
+
+        window.addEventListener('click', function (e) {
+            const dropdown = document.getElementById('notificationDropdown');
+            const wrapper = document.querySelector('.notification-wrapper');
+            if (!wrapper.contains(e.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Series & TV Shows</title>
+    <link rel="stylesheet" href="Dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="Dashboard.html" class="logo-btn hover-glow">
+                <img src="logo.png" alt="Logo" class="logo-img">
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="Dashboard.html" class="hover-glow">Dashboard</a></li>
+                <li><a href="Users.html" class="hover-glow">Users</a></li>
+                <li><a href="Movies.html" class="hover-glow">Movies</a></li>
+                <li><a href="Series.html" class="hover-glow" style="color:#228EE5;">Series</a></li>
+                <li><a href="Wallet.html" class="hover-glow">Wallet</a></li>
+                <li><a href="forum.html" class="hover-glow">Forum</a></li>
+                <li><a href="chat.html" class="hover-glow">Chat</a></li>
+            </ul>
+
+            <div class="nav-icons">
+                <div class="search-container">
+                    <input type="text" id="navSearch" class="search-input-nav" placeholder="Type to search...">
+                    <button class="icon-btn hover-glow search-btn-nav" onclick="toggleSearch()">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                </div>
+                <div class="notification-wrapper">
+                    <button class="icon-btn hover-glow" onclick="toggleNotifications()">
+                        <i class="fa-solid fa-bell"></i>
+                        <span
+                            style="position:absolute; top:0; right:0; width:8px; height:8px; background:red; border-radius:50%;"></span>
+                    </button>
+
+                    <div id="notificationDropdown" class="notification-dropdown">
+                        <div class="notification-header">
+                            <span>Notifications</span>
+                            <span class="mark-read">Mark all as read</span>
+                        </div>
+                        <div class="notification-list">
+                            <div class="notif-item">
+                                <div class="notif-content">
+                                    <h4>New User Registration</h4>
+                                    <p>User <b>@john_doe</b> has requested to join.</p>
+                                    <span class="notif-time">2 mins ago</span>
+                                </div>
+                            </div>
+                            <div class="notif-item">
+                                <div class="notif-content">
+                                    <h4>Movie Approved</h4>
+                                    <p><b>Inception</b> was approved by admin.</p>
+                                    <span class="notif-time">1 hour ago</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <a href="AdminProfile.html" class="icon-btn hover-glow"><i class="fa-solid fa-user"></i></a>
+                <button class="icon-btn hover-glow"><i class="fa-solid fa-sun"></i></button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <h1 class="welcome-text">TV Series</h1>
+
+        <section class="movie-control-panel">
+            <div class="section-tab">Advance Search</div>
+            <div class="panel-content">
+                <div class="panel-icon">
+                    <i class="fa-solid fa-tv"></i>
+                </div>
+                <div class="panel-form">
+                    <div class="input-row">
+                        <select id="search-year" class="select-field">
+                            <option value="">Select Year</option>
+                        </select>
+                        <input type="text" class="input-field" placeholder="Country">
+                        <input type="text" class="input-field" placeholder="Actor">
+                        <input type="text" class="input-field" placeholder="Creator/Director">
+                    </div>
+
+                    <div class="search-wrapper">
+                        <input type="text" class="input-field" placeholder="Search for TV shows...">
+                        <button class="search-icon-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    </div>
+
+                    <div class="input-row" style="margin-top: 15px;">
+                        <input type="text" class="input-field" placeholder="Genre (e.g. Drama, Sitcom, Sci-Fi)">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="movie-control-panel">
+            <div class="section-tab">Upload Series</div>
+            <div class="panel-content">
+                <div class="panel-icon">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                </div>
+                <div class="panel-form">
+                    <div class="input-row">
+                        <input type="text" class="input-field" placeholder="Series Title">
+                        <select id="upload-year" class="select-field">
+                            <option value="">Select Year</option>
+                        </select>
+                        <input type="text" class="input-field" placeholder="Country">
+                    </div>
+
+                    <div class="input-row">
+                        <input type="text" class="input-field" placeholder="Creator/Director">
+                        <input type="text" class="input-field" placeholder="Main Actor">
+                        <input type="text" class="input-field" placeholder="Genres (e.g. Action, Drama)">
+                    </div>
+
+                    <input type="file" id="posterFileInput" style="display: none;" accept="image/*">
+                    <input type="file" id="seriesFileInput" style="display: none;" accept="video/*, .mkv, .mp4, .avi"
+                        multiple>
+
+                    <div class="input-row" style="margin-top: 15px;">
+                        <button class="btn-upload"
+                            style="background-color: var(--bg-element); border: 1px solid var(--accent-color); color: var(--accent-color);"
+                            onclick="document.getElementById('posterFileInput').click()">
+                            <i class="fa-solid fa-image"></i> Select Poster
+                        </button>
+                        <button class="btn-upload"
+                            style="background-color: var(--bg-element); border: 1px solid var(--accent-color); color: var(--accent-color);"
+                            onclick="document.getElementById('seriesFileInput').click()">
+                            <i class="fa-solid fa-film"></i> Select Series
+                        </button>
+                    </div>
+
+                    <button class="btn-upload" style="margin-top: 15px;">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Upload Series
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-container blue-border">
+            <div class="section-tab">Library</div>
+
+            <div class="movie-grid" id="series-grid-container">
+            </div>
+        </section>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-socials">
+                <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+                <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                <a href="#"><i class="fa-brands fa-twitter"></i></a>
+            </div>
+            <div class="footer-links">
+                <ul>
+                    <li><a href="#">Help Center</a></li>
+                    <li><a href="#">Privacy</a></li>
+                    <li><a href="#">Contact Us</a></li>
+                    <li><a href="#">Jobs</a></li>
+                </ul>
+            </div>
+            <p class="copyright">© 1997-2026 MSP - Movie Streaming Platform, Inc.</p>
+        </div>
+    </footer>
+
+    <script>
+        function populateYears(elementId) {
+            const select = document.getElementById(elementId);
+            const currentYear = new Date().getFullYear();
+            const startYear = 1970;
+
+            for (let i = currentYear; i >= startYear; i--) {
+                let option = document.createElement('option');
+                option.value = i;
+                option.text = i;
+                select.appendChild(option);
+            }
+        }
+        populateYears('search-year');
+        populateYears('upload-year');
+
+        function triggerFileSelect() {
+            document.getElementById('seriesFileInput').click();
+        }
+
+        document.getElementById('seriesFileInput').addEventListener('change', function () {
+            if (this.files && this.files.length > 0) {
+                alert(`File Selected: ${this.files[0].name}`);
+            }
+        });
+
+        const API_KEY = '96878691f0272aade53fca27ac2a739f';
+        const API_URL = `https://api.themoviedb.org/3/tv/popular?api_key=${API_KEY}&language=en-US&page=1`;
+        const IMAGE_PATH = 'https://image.tmdb.org/t/p/w500';
+
+        const gridContainer = document.getElementById('series-grid-container');
+
+        async function getSeries() {
+            if (API_KEY === 'YOUR_API_KEY_HERE') {
+                console.log("Please add your TMDB API Key in the script tag!");
+                return;
+            }
+
+            try {
+                const res = await fetch(API_URL);
+                const data = await res.json();
+                showSeries(data.results);
+            } catch (error) {
+                console.error("Error fetching series:", error);
+            }
+        }
+
+        function showSeries(shows) {
+            gridContainer.innerHTML = '';
+
+            shows.forEach((show) => {
+                const { name, poster_path, vote_average } = show;
+
+                const movieEl = document.createElement('a');
+                movieEl.classList.add('movie-card');
+                movieEl.href = `SeriesDetail.html?id=${show.id}`;
+
+                // --- NEW BADGE LOGIC ---
+                const isPremium = Math.random() < 0.3; // 30% chance of Premium
+                const badgeClass = isPremium ? 'badge-premium' : 'badge-free';
+                const badgeText = isPremium ? 'PREMIUM' : 'FREE';
+
+                const stars = Math.round(vote_average / 2);
+                let starHTML = '';
+                for (let i = 1; i <= 5; i++) {
+                    if (i <= stars) starHTML += '<i class="fa-solid fa-star"></i>';
+                    else starHTML += '<i class="fa-regular fa-star"></i>';
+                }
+
+                movieEl.innerHTML = `
+                    <div class="badge-overlay ${badgeClass}">${badgeText}</div>
+
+                    <img src="${IMAGE_PATH + poster_path}" alt="${name}" class="movie-poster">
+                    <div class="movie-overlay">
+                        <h3 class="overlay-title">${name}</h3>
+                        <p class="overlay-genre">Rating: ${vote_average}</p>
+                        <div class="overlay-rating">
+                            ${starHTML}
+                        </div>
+                        <p style="color:#ccc; font-size:12px; margin-top:10px;">Click for Details</p>
+                    </div>
+                `;
+
+                gridContainer.appendChild(movieEl);
+            });
+        }
+
+        getSeries();
+
+    </script>
+
+    <script src="theme.js"></script>
+    <script src="notification.js"></script>
+
+</body>
+
+</html>

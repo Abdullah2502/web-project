@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Producer Dashboard</title>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lato:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="Dashboard.css" />
+    <link rel="stylesheet" href="producerPage.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+
+    
+  </head>
+
+  <div class="modal-overlay" id="payFeeModal">
+    <div class="modal">
+      <h2>Pay Monthly Fee</h2>
+      <p>Your monthly producer subscription fee is <b>$49</b></p>
+
+      <div class="modal-actions">
+        <button class="btn primary" onclick="openPayModal()">
+          Pay Now
+        </button>
+        <button
+          class="btn secondary"
+          onclick="closeModal('payFeeModal')"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="collectEarningsModal">
+    <div class="modal">
+      <h2>Collect Earnings</h2>
+      <p>Available balance: <b>$19,000</b></p>
+
+      <div class="modal-actions">
+        <button class="btn primary" onclick="openWithdrawModal()">
+          Withdraw
+        </button>
+        <button
+          class="btn secondary"
+          onclick="closeModal('collectEarningsModal')"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div
+    id="modal-withdraw"
+    class="modal-overlay"
+    onclick="closeModalOnOverlay(event, 'modal-withdraw')"
+  >
+    <div class="modal-form-container">
+      <div class="modal-header">
+        <h3>Withdraw Funds</h3>
+        <button class="close-icon-btn" onclick="closeModal('modal-withdraw')">
+          &times;
+        </button>
+      </div>
+
+      <label class="modal-label">Amount ($)</label>
+      <input
+        type="number"
+        class="input-field"
+        placeholder="Enter amount (e.g. 50.00)"
+      />
+
+      <label class="modal-label">Withdraw To</label>
+      <select class="select-field">
+        <option>Select Method</option>
+        <option>Bank Account (**** 8821)</option>
+        <option>Visa Card (**** 4242)</option>
+      </select>
+
+      <div style="margin-top: 15px; font-size: 12px; color: #888">
+        Available Balance: <b style="color: var(--accent-color)">$2300.00</b>
+      </div>
+
+      <button
+        class="btn-save modal-btn-action"
+        style="background-color: #00e676"
+        onclick="dummyAction('Withdrawal')"
+      >
+        Confirm Withdrawal
+      </button>
+    </div>
+  </div>
+
+  <div
+    id="modal-add-card"
+    class="modal-overlay"
+    onclick="closeModalOnOverlay(event, 'modal-add-card')"
+  >
+    <div class="modal-form-container">
+      <div class="modal-header">
+        <h3>Add New Card</h3>
+        <button class="close-icon-btn" onclick="closeModal('modal-add-card')">
+          &times;
+        </button>
+      </div>
+
+      <label class="modal-label">Cardholder Name</label>
+      <input type="text" class="input-field" placeholder="Name on card" />
+
+      <label class="modal-label">Card Number</label>
+      <input
+        type="text"
+        class="input-field"
+        placeholder="0000 0000 0000 0000"
+      />
+
+      <div style="display: flex; gap: 15px">
+        <div style="flex: 1">
+          <label class="modal-label">Expiry Date</label>
+          <input type="text" class="input-field" placeholder="MM/YY" />
+        </div>
+        <div style="flex: 1">
+          <label class="modal-label">CVV</label>
+          <input type="password" class="input-field" placeholder="123" />
+        </div>
+      </div>
+
+      <button
+        class="btn-save modal-btn-action"
+        style="background-color: #ffea00; color: black"
+        onclick="dummyAction('Card')"
+      >
+        Save Card
+      </button>
+    </div>
+  </div>
+
+  <body>
+    <div class="page">
+      <!-- NAVBAR -->
+      <nav class="navbar">
+        <div class="nav-container">
+          <a href="Dashboard.html" class="logo-btn hover-glow">
+            <img src="logo.png" alt="Logo" class="logo-img" />
+          </a>
+
+          <ul class="nav-links">
+            <li>
+              <a href="Dashboard.html" class="hover-glow" style="color: #228ee5"
+                >Dashboard</a
+              >
+            </li>
+            <!-- <li><a href="Users.html" class="hover-glow">Users</a></li> -->
+            <li><a href="Movies.html" class="hover-glow">Movies</a></li>
+            <li><a href="Series.html" class="hover-glow">Series</a></li>
+            <!-- <li><a href="Wallet.html" class="hover-glow">Wallet</a></li> -->
+            <li><a href="forum.html" class="hover-glow">Forum</a></li>
+            <li><a href="chat.html" class="hover-glow">Chat</a></li>
+          </ul>
+
+          <div class="nav-icons">
+            <button class="icon-btn hover-glow">
+              <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
+            <div class="notification-wrapper">
+              <button
+                class="icon-btn hover-glow"
+                onclick="toggleNotifications()"
+              >
+                <i class="fa-solid fa-bell"></i>
+                <span
+                  style="
+                    position: absolute;
+                    top: 0;
+                    right: 0;
+                    width: 8px;
+                    height: 8px;
+                    background: red;
+                    border-radius: 50%;
+                  "
+                ></span>
+              </button>
+
+              <div id="notificationDropdown" class="notification-dropdown">
+                <div class="notification-header">
+                  <span>Notifications</span>
+                  <span class="mark-read">Mark all as read</span>
+                </div>
+                <div class="notification-list">
+                  <div class="notif-item">
+                    <div class="notif-content">
+                      <h4>New User Registration</h4>
+                      <p>User <b>@john_doe</b> has requested to join.</p>
+                      <span class="notif-time">2 mins ago</span>
+                    </div>
+                  </div>
+
+                  <div class="notif-item">
+                    <div class="notif-content">
+                      <h4>Movie Approved</h4>
+                      <p><b>Inception</b> was approved by admin.</p>
+                      <span class="notif-time">1 hour ago</span>
+                    </div>
+                  </div>
+
+                  <div class="notif-item">
+                    <div class="notif-content">
+                      <h4>System Alert</h4>
+                      <p>High server load detected.</p>
+                      <span class="notif-time">3 hours ago</span>
+                    </div>
+                  </div>
+
+                  <div class="notif-item">
+                    <div class="notif-content">
+                      <h4>New Comment</h4>
+                      <p>New comment on <b>Interstellar</b>.</p>
+                      <span class="notif-time">5 hours ago</span>
+                    </div>
+                  </div>
+
+                  <div class="notif-item">
+                    <div class="notif-content">
+                      <h4>Payment Received</h4>
+                      <p>Subscription #9928 processed.</p>
+                      <span class="notif-time">1 day ago</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <a href="UserProfile.html" class="icon-btn hover-glow"
+              ><i class="fa-solid fa-user"></i
+            ></a>
+            <button class="icon-btn hover-glow">
+              <i class="fa-solid fa-sun"></i>
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      <div class="main-content">
+        <!-- HERO -->
+        <section class="hero">
+          <div class="prod-hero-left">
+            <h1>Welcome back<br /><span>John Snow</span></h1>
+
+            <div class="hero-buttons">
+              <button class="btn primary" id="payFeeBtn">
+                Pay Monthly Fee
+              </button>
+              <button class="btn primary" id="collectEarningsBtn">
+                Collect Earnings
+              </button>
+            </div>
+          </div>
+
+          <div class="hero-right">
+            <i class="fa fa-user-o" aria-hidden="true"></i>
+          </div>
+        </section>
+
+        <!-- STATS -->
+        <section class="stats">
+          <div class="stat-card">
+            <h4>Total Earning</h4>
+            <p>Total 8 movie</p>
+            <span>19000$</span>
+          </div>
+
+          <div class="stat-card">
+            <h4>This Month</h4>
+            <p>1 New Movie</p>
+            <span>4000$</span>
+          </div>
+
+          <div class="stat-card">
+            <h4>Most Earning</h4>
+            <p>The Godfather</p>
+            <span>2500$</span>
+          </div>
+        </section>
+
+        <!-- MOVIES -->
+        <section class="movies">
+          <div class="movies-header">
+            <h2>Uploaded Movies</h2>
+            <button
+              class="btn primary small"
+              onclick="window.location.href='Movies.html'"
+            >
+              Upload New Movie
+            </button>
+          </div>
+
+          <div class="movies-row">
+            <div class="movie-card"><div class="plus">+</div></div>
+            <div class="movie-card"><div class="plus">+</div></div>
+            <div class="movie-card"><div class="plus">+</div></div>
+            <div class="movie-card"><div class="plus">+</div></div>
+            <div class="movie-card"><div class="plus">+</div></div>
+            <div class="movie-card"><div class="plus">+</div></div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      function toggleNotifications() {
+        const dropdown = document.getElementById("notificationDropdown");
+        dropdown.classList.toggle("active");
+      }
+
+      window.addEventListener("click", function (e) {
+        const dropdown = document.getElementById("notificationDropdown");
+        const wrapper = document.querySelector(".notification-wrapper");
+        if (!wrapper.contains(e.target)) {
+          dropdown.classList.remove("active");
+        }
+      });
+
+      const payFeeBtn = document.getElementById("payFeeBtn");
+      const collectEarningsBtn = document.getElementById("collectEarningsBtn");
+
+      payFeeBtn.onclick = () => openModal("payFeeModal");
+      collectEarningsBtn.onclick = () => openModal("collectEarningsModal");
+
+      function openModal(id) {
+        document.getElementById(id).classList.add("active");
+      }
+
+      function closeModal(id) {
+        document.getElementById(id).classList.remove("active");
+      }
+
+      window.addEventListener("click", (e) => {
+        document.querySelectorAll(".modal-overlay").forEach((modal) => {
+          if (e.target === modal) modal.classList.remove("active");
+        });
+      });
+
+      function openWithdrawModal() {
+        closeModal("collectEarningsModal"); // optional, closes the earnings modal
+        openModal("modal-withdraw"); // opens the withdraw modal
+      }
+      
+      function openPayModal() {
+        closeModal("payFeeModal"); // optional, closes the earnings modal
+        openModal("modal-add-card"); // opens the withdraw modal
+      }
+    </script>
+
+    <script src="theme.js"></script>
+  </body>
+</html>

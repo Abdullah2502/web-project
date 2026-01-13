@@ -1,0 +1,331 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Lato', sans-serif;
+  background: radial-gradient(circle at top, #0d1b3d 0%, #050914 60%);
+  color: white;
+}
+
+.page {
+  max-width: 1400px;
+  margin: auto;
+  padding: 32px;
+}
+
+/* NAVBAR */
+.top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 28px;
+  border-radius: 16px;
+  background: rgba(10, 20, 40, 0.6);
+  border: 1px solid #2a5cff;
+  margin-bottom: 80px;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.logo {
+  width: 42px;
+  height: 42px;
+  background: #2a5cff;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+
+.play-icon {
+  font-size: 18px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 24px;
+  list-style: none;
+}
+
+.nav-links li {
+  cursor: pointer;
+  opacity: 0.85;
+}
+
+.nav-links li:hover {
+  opacity: 1;
+  color: #2a5cff;
+}
+
+.nav-right {
+  display: flex;
+  gap: 20px;
+}
+
+.icon {
+  cursor: pointer;
+  font-size: 18px;
+}
+
+/* HERO */
+.hero {
+  display: flex;
+  align-items: center;
+  margin-bottom: 80px;
+  min-height: 320px;
+  margin-left: 64px;
+}
+
+.hero h1 {
+  font-size: 56px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.hero h1 span {
+  font-weight: 700;
+}
+
+.hero-buttons {
+  margin-top: 32px;
+  display: flex;
+  gap: 20px;
+}
+
+.btn {
+  border-radius: 10px;
+  padding: 14px 28px;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+}
+
+.primary {
+  background: #2a9bff;
+  color: white;
+}
+
+.secondary {
+  background: #1e6bd6;
+  color: white;
+}
+
+.small {
+  padding: 10px 20px;
+}
+
+.hero-right .user-icon {
+  width: 120px;
+  height: 120px;
+  border: 3px solid white;
+  border-radius: 32px;
+}
+
+/* STATS */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  margin-bottom: 80px;
+}
+
+.stat-card {
+  padding: 28px;
+  border-radius: 20px;
+  background: rgba(10, 20, 40, 0.8);
+  border: 1px solid #2a5cff;
+}
+
+.stat-card h4 {
+  font-size: 20px;
+  margin-bottom: 6px;
+}
+
+.stat-card p {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.stat-card span {
+  display: block;
+  margin-top: 18px;
+  font-size: 36px;
+  font-weight: 700;
+}
+
+/* MOVIES */
+.movies-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.movies-row {
+  display: flex;
+  gap: 20px;
+}
+
+.movie-card {
+  width: 160px;
+  height: 240px;
+  border-radius: 16px;
+  background: #111a33;
+  position: relative;
+  overflow: hidden;
+}
+
+.plus {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 28px;
+  height: 28px;
+  background: rgba(0,0,0,0.6);
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+}
+
+.prod-hero-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.hero-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-right i {
+  font-size: 128px;
+  color: #ffffff;
+  opacity: 1;
+  margin: auto;
+}
+
+.stat-card,
+.movie-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-8px);
+  border-color: #4da3ff;
+  box-shadow: 0 12px 30px rgba(42, 155, 255, 0.25);
+}
+
+.movie-card:hover {
+  transform: translateY(-10px) scale(1.03);
+  box-shadow: 0 16px 35px rgba(42, 155, 255, 0.35);
+}
+
+.plus {
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.movie-card:hover .plus {
+  background: rgba(42, 155, 255, 0.9);
+  transform: scale(1.1);
+}
+
+.movie-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent 40%,
+    rgba(255,255,255,0.08),
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.movie-card:hover::after {
+  opacity: 1;
+}
+
+.btn {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    filter 0.2s ease;
+}
+
+/* Primary button */
+.btn.primary:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+  box-shadow: 0 8px 20px rgba(42, 155, 255, 0.35);
+}
+
+/* Secondary button */
+.btn.secondary:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+  box-shadow: 0 8px 18px rgba(30, 107, 214, 0.35);
+}
+
+/* Small buttons behave the same */
+.btn.small:hover {
+  transform: translateY(-2px);
+}
+
+/* Pressed state (optional but recommended) */
+.btn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal {
+  background: #0f172a;
+  padding: 30px;
+  width: 360px;
+  border-radius: 12px;
+  text-align: center;
+  color: #fff;
+  box-shadow: 0 0 30px rgba(34, 142, 229, 0.4);
+}
+
+.modal h2 {
+  margin-bottom: 10px;
+}
+
+.modal p {
+  opacity: 0.85;
+  margin-bottom: 20px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}

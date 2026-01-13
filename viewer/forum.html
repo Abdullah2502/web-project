@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forum - MSP Platform</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* --- THEME VARIABLES --- */
+        :root {
+            --bg-body: #020b1f;
+            --bg-card: #0b1326;
+            --bg-input: #161d2f;
+            --border-color: #1f2940;
+            --text-main: white;
+            --text-sub: #aaa;
+            --nav-bg: linear-gradient(to bottom, rgba(2,11,31,0.95), transparent);
+        }
+
+        [data-theme="light"] {
+            --bg-body: #f0f2f5;
+            --bg-card: #ffffff;
+            --bg-input: #e4e6eb;
+            --border-color: #ced4da;
+            --text-main: #1c1e21;
+            --text-sub: #65676b;
+            --nav-bg: linear-gradient(to bottom, rgba(255,255,255,0.95), transparent);
+        }
+
+        /* --- RESET & GLOBAL --- */
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif;}
+        body {background-color: var(--bg-body); color: var(--text-main); overflow-x:hidden; transition: background 0.3s, color 0.3s;}
+        a {text-decoration:none; color:inherit;}
+
+        /* --- NAVBAR --- */
+        .navbar {
+            display:flex; 
+            align-items:center; 
+            justify-content:space-between; 
+            padding:15px 5%; 
+            position:fixed; 
+            top:0; 
+            width:100%; 
+            z-index:1000; 
+            background: var(--nav-bg);
+            border-bottom: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+        }
+        .nav-links {display:flex; list-style:none; gap:25px;}
+        .nav-links a {color: var(--text-sub); font-weight:500; font-size:15px; transition: 0.3s;}
+        .nav-links a.active {color:#e50914;}
+        .nav-icons {display:flex; gap:20px; font-size:18px; align-items: center; color:#ccc;}
+        .logo-img {height:43px;}
+
+        /* --- SEARCH BAR CSS --- */
+        .search-container { display: flex; align-items: center; position: relative; }
+        .search-input {
+            width: 0; opacity: 0; background: rgba(255,255,255,0.1); border: 1px solid #444;
+            color: var(--text-main); padding: 5px 0; border-radius: 4px; outline: none;
+            transition: all 0.4s ease; font-size: 14px;
+        }
+        .search-input.active { width: 180px; opacity: 1; padding: 5px 10px; margin-right: 10px; }
+        .fa-magnifying-glass { cursor: pointer; transition: 0.3s; }
+        .fa-magnifying-glass:hover { color: #e50914; }
+
+        /* --- USER ICON & LOGOUT CSS --- */
+        #user-display-name { font-size: 14px; color: #e50914; font-weight: 600; cursor: pointer; }
+        .user-container { position: relative; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .logout-dropdown {
+            position: absolute; top: 40px; right: 0; background: var(--bg-card);
+            border: 1px solid var(--border-color); border-radius: 4px; display: none;
+            z-index: 1001; overflow: hidden;
+            min-width: 140px;
+        }
+        .logout-dropdown button {
+            background: none; border: none; color: var(--text-main); padding: 10px 20px;
+            cursor: pointer; width: 100%; text-align: left; font-size: 14px; transition: 0.3s;
+        }
+        .logout-dropdown button:hover { background: #e50914; color: white; }
+
+        /* --- THEME TOGGLE ICON --- */
+        #theme-toggle { cursor: pointer; transition: 0.3s; }
+        #theme-toggle:hover { color: #e50914; }
+
+        /* --- FORUM CONTAINER --- */
+        .forum-container { padding: 120px 15% 50px; min-height: 80vh; }
+
+        /* --- FILTER BAR --- */
+        .filter-bar { display: flex; gap: 15px; margin-bottom: 40px; }
+        .tab {
+            padding: 8px 24px;
+            border-radius: 20px;
+            background: var(--border-color);
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.3s;
+            border: 1px solid transparent;
+            color: var(--text-sub);
+        }
+        .tab.active, .tab:hover {
+            background: #e50914;
+            color: white;
+            box-shadow: 0 0 15px rgba(229, 9, 20, 0.4);
+        }
+
+        /* --- POST STYLES --- */
+        .create-post { background: var(--bg-card); padding: 25px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 50px; }
+        .create-post input, .create-post textarea {
+            width: 100%; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);
+            padding: 12px 15px; border-radius: 6px; margin-bottom: 15px; outline: none;
+        }
+        .btn-post { background: #e50914; color: white; border: none; padding: 12px 30px; border-radius: 4px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        .btn-post:hover { background: #b20710; }
+
+        .post-card { background: var(--bg-card); padding: 25px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 25px; transition: 0.4s; }
+        .post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white;}
+        .post-title { font-size: 19px; font-weight: 600; margin-bottom: 10px; color: var(--text-main); }
+        .post-content { color: var(--text-sub); font-size: 14px; margin-bottom: 20px; }
+        .post-actions { display: flex; gap: 25px; border-top: 1px solid var(--border-color); padding-top: 18px; }
+        .action-item { cursor: pointer; color: #808080; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+        .action-item:hover, .action-item.liked { color: #e50914; }
+
+        /* --- COMMENTS --- */
+        .comment-section { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color); }
+        .comment-input-area { display: flex; gap: 10px; margin-bottom: 15px; }
+        .comment-input-area input { flex: 1; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 12px; border-radius: 4px; outline: none; }
+        .comments-list { list-style: none; }
+        .single-comment { background: var(--bg-input); padding: 10px; border-radius: 6px; margin-bottom: 8px; font-size: 13px; border-left: 2px solid #e50914; word-wrap: break-word; color: var(--text-main); }
+        .single-comment span { font-weight: bold; color: #e50914; }
+
+        /* --- FOOTER --- */
+        .footer { background-color: var(--bg-body); padding: 50px 5% 20px; border-top: 1px solid var(--border-color); margin-top: 80px; }
+        .footer-container { max-width: 1000px; margin: 0 auto; }
+        .footer-socials { margin-bottom: 25px; }
+        .footer-socials a { font-size: 24px; margin-right: 25px; color: var(--text-main); transition: 0.3s; }
+        .footer-socials a:hover { color: #e50914; }
+        .footer-links ul { display: grid; grid-template-columns: repeat(4, 1fr); list-style: none; gap: 15px; }
+        .footer-links a { color: #808080; font-size: 13px; transition: 0.3s; }
+        .footer-links a:hover { color: var(--text-main); text-decoration: underline; }
+        .copyright { color: #808080; font-size: 11px; margin-top: 30px; }
+
+        @media(max-width: 768px) { 
+            .forum-container { padding: 100px 5% 50px; } 
+            .footer-links ul { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <img src="logo.png" class="logo-img" alt="MSP">
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="movie.html">Movies</a></li>
+            <li><a href="series.html">Series</a></li>
+            <li><a href="forum.html" class="active">Forum</a></li>
+            <li><a href="subscription.html">Subscribe</a></li>
+        </ul>
+        <div class="nav-icons">
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="Search posts..." id="searchInput">
+                <i class="fa-solid fa-magnifying-glass" id="searchIcon"></i>
+            </div>
+
+            <i class="fa-regular fa-bell"></i>
+
+            <div class="user-container" id="userArea">
+                <span id="user-display-name"></span>
+                <i class="fa-solid fa-circle-user"></i>
+                <div class="logout-dropdown" id="logoutDropdown">
+                    <button onclick="window.location.href='userDashboard.html'">Dashboard</button>
+                    <button id="logoutBtn">Log Out</button>
+                </div>
+            </div>
+
+            <i class="fa-solid fa-moon" id="theme-toggle"></i>
+        </div>
+    </nav>
+
+    <main class="forum-container">
+        <div class="create-post">
+            <h3 style="margin-bottom: 15px;">Start a Conversation <span id="premium-note" style="font-size: 12px; color: #f1c40f; font-weight: normal; margin-left: 10px;">(Premium Only)</span></h3>
+            <input type="text" id="postTitle" placeholder="What's on your mind?">
+            <textarea id="postDesc" rows="3" placeholder="Write more details..."></textarea>
+            <button class="btn-post" onclick="handleNewPost()">Post Now</button>
+        </div>
+
+        <div class="filter-bar">
+            <div class="tab active" onclick="filterPosts('all', this)">All Posts</div>
+            <div class="tab" onclick="filterPosts('recent', this)">Recent</div>
+            <div class="tab" onclick="filterPosts('popular', this)">Most Liked</div>
+        </div>
+
+        <div id="forumPostsContainer"></div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-socials">
+                <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+                <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                <a href="#"><i class="fa-brands fa-twitter"></i></a>
+            </div>
+            <div class="footer-links">
+                <ul>
+                    <li><a href="#">Help Center</a></li>
+                    <li><a href="#">Privacy</a></li>
+                    <li><a href="#">Contact Us</a></li>
+                    <li><a href="#">Jobs</a></li>
+                </ul>
+            </div>
+            <p class="copyright">© 1997-2026 MSP - Movie Streaming Platform, Inc.</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- THEME TOGGLE LOGIC ---
+        const themeToggle = document.getElementById('theme-toggle');
+        const body = document.body;
+
+        themeToggle.addEventListener('click', () => {
+            if (body.getAttribute('data-theme') === 'light') {
+                body.removeAttribute('data-theme');
+                themeToggle.classList.replace('fa-sun', 'fa-moon');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                body.setAttribute('data-theme', 'light');
+                themeToggle.classList.replace('fa-moon', 'fa-sun');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+
+        // Load saved theme
+        if(localStorage.getItem('theme') === 'light') {
+            body.setAttribute('data-theme', 'light');
+            themeToggle.classList.replace('fa-moon', 'fa-sun');
+        }
+
+        // Sample Posts
+        let posts = [
+            { id: 1, user: "JD", name: "JohnDoe", title: "The Dark Knight: Best Joker?", content: "Heath Ledger's performance is unmatched. Anyone else agree?", likes: 1240, likedByMe: false, time: 2, color: "#e50914", comments: [{text: "Absolutely! No one can top him.", email: "admin@msp.com"}] },
+            { id: 2, user: "AS", name: "AnnaSmith", title: "Interstellar Visuals", content: "Just watched it on IMAX. The black hole scene is a masterpiece.", likes: 850, likedByMe: false, time: 5, color: "#2ecc71", comments: [] },
+            { id: 3, user: "MK", name: "MikeKing", title: "Stranger Things Season 5", content: "The wait is killing me! Any leaks on the release date?", likes: 45, likedByMe: false, time: 10, color: "#3498db", comments: [] }
+        ];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            renderPosts(posts);
+
+            const username = localStorage.getItem('username');
+            const globalEmail = localStorage.getItem('globalUserEmail');
+            const membership = localStorage.getItem('membership');
+
+            const userArea = document.getElementById('userArea');
+            const userDisplayName = document.getElementById('user-display-name');
+            const logoutDropdown = document.getElementById('logoutDropdown');
+            const logoutBtn = document.getElementById('logoutBtn');
+
+            const activeUser = globalEmail || username;
+
+            if (activeUser) {
+                userDisplayName.textContent = activeUser;
+                if (membership === 'premium') {
+                    userDisplayName.style.color = "#FFD700";
+                    userDisplayName.innerHTML += ' <i class="fa-solid fa-crown" style="font-size: 10px; margin-left: 4px;"></i>';
+                    document.getElementById('premium-note').style.display = 'none';
+                }
+
+                userArea.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    logoutDropdown.style.display = (logoutDropdown.style.display === 'block') ? 'none' : 'block';
+                });
+                logoutBtn.addEventListener('click', function() {
+                    localStorage.removeItem('username');
+                    localStorage.removeItem('globalUserEmail');
+                    localStorage.removeItem('membership');
+                    window.location.href = 'index.html';
+                });
+            } else {
+                userArea.addEventListener('click', function() {
+                    window.location.href = 'auth.html';
+                });
+            }
+
+            const searchIcon = document.getElementById('searchIcon');
+            const searchInput = document.getElementById('searchInput');
+
+            searchIcon.addEventListener('click', (e) => {
+                e.stopPropagation();
+                searchInput.classList.toggle('active');
+                if (searchInput.classList.contains('active')) searchInput.focus();
+            });
+
+            searchInput.addEventListener('keyup', function() {
+                const term = searchInput.value.toLowerCase();
+                const filtered = posts.filter(p => 
+                    p.title.toLowerCase().includes(term) || 
+                    p.content.toLowerCase().includes(term)
+                );
+                renderPosts(filtered);
+            });
+
+            document.addEventListener('click', function() {
+                logoutDropdown.style.display = 'none';
+                searchInput.classList.remove('active');
+            });
+            searchInput.addEventListener('click', (e) => e.stopPropagation());
+        });
+
+        function renderPosts(data) {
+            const container = document.getElementById('forumPostsContainer');
+            container.innerHTML = ''; 
+
+            data.forEach(post => {
+                const commentHTML = post.comments.map(c => `
+                    <li class="single-comment">
+                        <span>${c.email}:</span> ${c.text}
+                    </li>`).join('');
+
+                const likeIcon = post.likedByMe ? "fa-solid fa-thumbs-up" : "fa-regular fa-thumbs-up";
+                const likedClass = post.likedByMe ? "liked" : "";
+
+                const card = `
+                    <div class="post-card">
+                        <div class="post-header">
+                            <div class="user-avatar" style="background: ${post.color}">${post.user}</div>
+                            <div>
+                                <div style="font-size: 14px; font-weight: 600;">${post.name}</div>
+                                <div style="font-size: 12px; color: #666;">${post.time} hours ago</div>
+                            </div>
+                        </div>
+                        <div class="post-title">${post.title}</div>
+                        <p class="post-content">${post.content}</p>
+                        <div class="post-actions">
+                            <span class="action-item ${likedClass}" onclick="toggleLike(${post.id})">
+                                <i class="${likeIcon}"></i> 
+                                <span class="count">${post.likes.toLocaleString()}</span>
+                            </span>
+                            <span class="action-item" onclick="toggleCommentSection(this)">
+                                <i class="fa-regular fa-comment"></i> Comment (${post.comments.length})
+                            </span>
+                            <span class="action-item"><i class="fa-solid fa-share-nodes"></i> Share</span>
+                        </div>
+                        <div class="comment-section">
+                            <div class="comment-input-area">
+                                <input type="text" placeholder="Write a comment...">
+                                <button class="btn-post" style="padding: 5px 15px;" onclick="addComment(this, ${post.id})">Post</button>
+                            </div>
+                            <ul class="comments-list">${commentHTML}</ul>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += card;
+            });
+        }
+
+        function toggleLike(id) {
+            const post = posts.find(p => p.id === id);
+            if (!post.likedByMe) { post.likes++; post.likedByMe = true; }
+            else { post.likes--; post.likedByMe = false; }
+            renderPosts(posts);
+        }
+
+        function toggleCommentSection(element) {
+            const section = element.closest('.post-card').querySelector('.comment-section');
+            section.style.display = section.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function addComment(button, postId) {
+            const input = button.previousElementSibling;
+            if(!input.value.trim()) return;
+
+            const currentEmail = localStorage.getItem('globalUserEmail') || localStorage.getItem('username') || "Guest";
+
+            posts.find(p => p.id === postId).comments.push({
+                text: input.value.trim(),
+                email: currentEmail
+            });
+
+            renderPosts(posts);
+        }
+
+        function filterPosts(type, btn) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            let filtered = [...posts];
+            if (type === 'recent') filtered.sort((a, b) => a.time - b.time);
+            else if (type === 'popular') filtered.sort((a, b) => b.likes - a.likes);
+            renderPosts(filtered);
+        }
+
+        function handleNewPost() {
+            const membership = localStorage.getItem('membership');
+            if (membership !== 'premium') {
+                alert("Only Premium members can start new conversations in the forum.");
+                window.location.href = 'subscription.html';
+                return;
+            }
+
+            const title = document.getElementById('postTitle').value;
+            const desc = document.getElementById('postDesc').value;
+            const currentUsername = localStorage.getItem('globalUserEmail') || localStorage.getItem('username') || "Guest";
+            const initials = currentUsername.substring(0, 2).toUpperCase();
+
+            if(!title || !desc) return alert("Please fill in both fields.");
+            
+            posts.unshift({ 
+                id: Date.now(), 
+                user: initials, 
+                name: currentUsername, 
+                title, 
+                content: desc, 
+                likes: 0, 
+                likedByMe: false, 
+                time: 0, 
+                color: "#9b59b6", 
+                comments: [] 
+            });
+            
+            renderPosts(posts);
+            document.getElementById('postTitle').value = ""; 
+            document.getElementById('postDesc').value = "";
+        }
+    </script>
+</body>
+</html>

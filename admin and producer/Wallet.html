@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet</title>
+    <link rel="stylesheet" href="Dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="theme.js"></script>
+</head>
+
+<body>
+
+    <div id="modal-withdraw" class="modal-overlay" onclick="closeModalOnOverlay(event, 'modal-withdraw')">
+        <div class="modal-form-container">
+            <div class="modal-header">
+                <h3>Withdraw Funds</h3>
+                <button class="close-icon-btn" onclick="closeModal('modal-withdraw')">&times;</button>
+            </div>
+
+            <label class="modal-label">Amount ($)</label>
+            <input type="number" class="input-field" placeholder="Enter amount (e.g. 50.00)">
+
+            <label class="modal-label">Withdraw To</label>
+            <select class="select-field">
+                <option>Select Method</option>
+                <option>Bank Account (**** 8821)</option>
+                <option>Visa Card (**** 4242)</option>
+            </select>
+
+            <div style="margin-top: 15px; font-size: 12px; color: #888;">
+                Available Balance: <b style="color:var(--accent-color)">$2300.00</b>
+            </div>
+
+            <button class="btn-save modal-btn-action" style="background-color: #00e676;"
+                onclick="dummyAction('Withdrawal')">Confirm Withdrawal</button>
+        </div>
+    </div>
+
+    <div id="modal-add-card" class="modal-overlay" onclick="closeModalOnOverlay(event, 'modal-add-card')">
+        <div class="modal-form-container">
+            <div class="modal-header">
+                <h3>Add New Card</h3>
+                <button class="close-icon-btn" onclick="closeModal('modal-add-card')">&times;</button>
+            </div>
+
+            <label class="modal-label">Cardholder Name</label>
+            <input type="text" class="input-field" placeholder="Name on card">
+
+            <label class="modal-label">Card Number</label>
+            <input type="text" class="input-field" placeholder="0000 0000 0000 0000">
+
+            <div style="display: flex; gap: 15px;">
+                <div style="flex: 1;">
+                    <label class="modal-label">Expiry Date</label>
+                    <input type="text" class="input-field" placeholder="MM/YY">
+                </div>
+                <div style="flex: 1;">
+                    <label class="modal-label">CVV</label>
+                    <input type="password" class="input-field" placeholder="123">
+                </div>
+            </div>
+
+            <button class="btn-save modal-btn-action" style="background-color: #ffea00; color: black;"
+                onclick="dummyAction('Card')">Save Card</button>
+        </div>
+    </div>
+
+    <div id="modal-add-bank" class="modal-overlay" onclick="closeModalOnOverlay(event, 'modal-add-bank')">
+        <div class="modal-form-container">
+            <div class="modal-header">
+                <h3>Link Bank Account</h3>
+                <button class="close-icon-btn" onclick="closeModal('modal-add-bank')">&times;</button>
+            </div>
+
+            <label class="modal-label">Bank Name</label>
+            <input type="text" class="input-field" placeholder="e.g. Chase, Bank of America">
+
+            <label class="modal-label">Account Holder Name</label>
+            <input type="text" class="input-field" placeholder="Full legal name">
+
+            <label class="modal-label">Account Number</label>
+            <input type="text" class="input-field" placeholder="Account Number">
+
+            <label class="modal-label">Routing / Swift Code</label>
+            <input type="text" class="input-field" placeholder="Routing Number">
+
+            <button class="btn-save modal-btn-action" style="background-color: #00e5ff; color: black;"
+                onclick="dummyAction('Bank Account')">Link Account</button>
+        </div>
+    </div>
+
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="Dashboard.html" class="logo-btn hover-glow">
+                <img src="logo.png" alt="Logo" class="logo-img">
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="Dashboard.html" class="hover-glow">Dashboard</a></li>
+                <li><a href="Users.html" class="hover-glow">Users</a></li>
+                <li><a href="Movies.html" class="hover-glow">Movies</a></li>
+                <li><a href="Series.html" class="hover-glow">Series</a></li>
+                <li><a href="Wallet.html" class="hover-glow" style="color:#228EE5;">Wallet</a></li>
+                <li><a href="forum.html" class="hover-glow">Forum</a></li>
+                <li><a href="chat.html" class="hover-glow">Chat</a></li>
+            </ul>
+
+            <div class="nav-icons">
+                <div class="notification-wrapper">
+                    <button class="icon-btn hover-glow" onclick="toggleNotifications()">
+                        <i class="fa-solid fa-bell"></i>
+                        <span
+                            style="position:absolute; top:0; right:0; width:8px; height:8px; background:red; border-radius:50%;"></span>
+                    </button>
+                    <div id="notificationDropdown" class="notification-dropdown">
+                        <div class="notification-header">
+                            <span>Notifications</span>
+                            <span class="mark-read">Mark all as read</span>
+                        </div>
+                        <div class="notification-list">
+                            <div class="notif-item">
+                                <div class="notif-content">
+                                    <h4>New Transaction</h4>
+                                    <p>Subscription received from user xyz.</p>
+                                    <span class="notif-time">10 mins ago</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <a href="AdminProfile.html" class="icon-btn hover-glow"><i class="fa-solid fa-user"></i></a>
+                <button class="icon-btn hover-glow"><i class="fa-solid fa-sun"></i></button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+
+        <section class="wallet-hero-card">
+            <h2 class="wallet-label">Total Balance:</h2>
+            <div class="wallet-amount">$2300.00</div>
+
+            <div class="wallet-actions">
+                <div class="w-action-item" onclick="openModal('modal-withdraw')">
+                    <div class="w-icon-box bg-green">
+                        <i class="fa-solid fa-arrow-down"></i>
+                    </div>
+                    <span class="w-label">Withdraw</span>
+                </div>
+
+                <div class="w-action-item" onclick="openModal('modal-add-card')">
+                    <div class="w-icon-box bg-yellow">
+                        <i class="fa-solid fa-credit-card"></i>
+                    </div>
+                    <span class="w-label">Add Card</span>
+                </div>
+
+                <div class="w-action-item" onclick="openModal('modal-add-bank')">
+                    <div class="w-icon-box bg-cyan">
+                        <i class="fa-solid fa-building-columns"></i>
+                    </div>
+                    <span class="w-label">Add Bank Account</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-container blue-border">
+            <div class="section-tab">Recent Transactions</div>
+            <div class="table-wrapper">
+                <table class="activity-table">
+                    <thead>
+                        <tr>
+                            <th>Transaction ID</th>
+                            <th>Type</th>
+                            <th>Username</th>
+                            <th>Date/Time</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#TXN-8821</td>
+                            <td>Subscription</td>
+                            <td>xyz</td>
+                            <td>2025-11-27 10:30:00</td>
+                            <td class="text-success">+$2.99</td>
+                        </tr>
+                        <tr>
+                            <td>#TXN-8822</td>
+                            <td>Subscription</td>
+                            <td>abc</td>
+                            <td>2025-11-27 10:30:00</td>
+                            <td class="text-success">+$10.99</td>
+                        </tr>
+                        <tr>
+                            <td>#TXN-8825</td>
+                            <td>Withdraw</td>
+                            <td>yer</td>
+                            <td>2025-11-27 10:30:00</td>
+                            <td class="text-danger">-$1000.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </div>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-socials">
+                <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+                <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                <a href="#"><i class="fa-brands fa-twitter"></i></a>
+            </div>
+            <div class="footer-links">
+                <ul>
+                    <li><a href="#">Help Center</a></li>
+                    <li><a href="#">Privacy</a></li>
+                    <li><a href="#">Contact Us</a></li>
+                    <li><a href="#">Jobs</a></li>
+                </ul>
+            </div>
+            <p class="copyright">© 1997-2026 MSP - Movie Streaming Platform, Inc.</p>
+        </div>
+    </footer>
+
+    <script>
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Close if clicking outside the form
+        function closeModalOnOverlay(event, modalId) {
+            if (event.target.id === modalId) {
+                closeModal(modalId);
+            }
+        }
+
+        function dummyAction(actionName) {
+            alert(`${actionName} processed successfully!`);
+            // Close all modals
+            document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
+        }
+    </script>
+    <script src="notification.js"></script>
+
+</body>
+
+</html>
