@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>All Users</title>
     <link rel="stylesheet" href="Dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -18,12 +18,12 @@
             </a>
 
             <ul class="nav-links">
-                <li><a href="Dashboard.html" class="hover-glow" style="color:#228EE5;">Dashboard</a></li>
-                <li><a href="Users.html" class="hover-glow">Users</a></li>
+                <li><a href="Dashboard.html" class="hover-glow">Dashboard</a></li>
+                <li><a href="Users.html" class="hover-glow" style="color:#228EE5;">Users</a></li>
                 <li><a href="Movies.html" class="hover-glow">Movies</a></li>
                 <li><a href="Series.html" class="hover-glow">Series</a></li>
                 <li><a href="Wallet.html" class="hover-glow">Wallet</a></li>
-                <li><a href="forum.html" class="hover-glow">Forum</a></li>
+                <li><a href="adminForum.html" class="hover-glow">Forum</a></li>
                 <li><a href="chat.html" class="hover-glow">Chat</a></li>
             </ul>
 
@@ -98,111 +98,76 @@
     </nav>
 
     <div class="main-content">
-        <h1 class="welcome-text">Welcome Admin,</h1>
 
-        <section class="stats-container">
-            <a href="Users.html" class="stat-card hover-glow-card">
-                <h3>Total Users</h3>
-                <p>1,288</p>
-            </a>
-
-            <div class="stat-card hover-glow-card">
-                <h3>Total Movies</h3>
-                <p>608</p>
-            </div>
-
-            <div class="stat-card hover-glow-card">
-                <div class="stat-split-row">
-                    <a href="Approvals.html#pending-users" class="stat-split-item">
-                        <h3>Pending Users</h3>
-                        <p>7</p>
-                    </a>
-
-                    <div class="stat-divider"></div>
-
-                    <a href="Approvals.html#pending-movies" class="stat-split-item">
-                        <h3>Pending Contents</h3>
-                        <p>6</p>
-                    </a>
-                </div>
-            </div>
-        </section>
-
-        <section class="section-container">
-            <div class="section-tab">Activity Logs</div>
+        <section class="section-container blue-border">
+            <div class="section-tab">All Users</div>
             <div class="table-wrapper">
                 <table class="activity-table">
                     <thead>
                         <tr>
                             <th>Username</th>
-                            <th>Activity</th>
+                            <th>Usertype</th>
+                            <th>Email</th>
                             <th>Date/Time</th>
+                            <th>Profile</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td>xyz</td>
-                            <td>movie</td>
-                            <td>2025-11-27 10:30:00</td>
+                            <td>viewer</td>
+                            <td>xyz@gmail.com</td>
+                            <td>2025-11-27</td>
+                            <td>
+                                <a href="UserProfile.html" class="btn-details">View Details</a>
+                            </td>
                         </tr>
                         <tr>
                             <td>abc</td>
-                            <td>upload</td>
-                            <td>2025-11-27 10:30:00</td>
+                            <td>producer</td>
+                            <td>abc@gmail.com</td>
+                            <td>2025-11-27</td>
+                            <td>
+                                <a href="UserProfile.html" class="btn-details">View Details</a>
+                            </td>
                         </tr>
                         <tr>
                             <td>fgt</td>
-                            <td>rating</td>
-                            <td>2025-11-27 10:30:00</td>
+                            <td>viewer</td>
+                            <td>fgt@gmail.com</td>
+                            <td>2025-11-27</td>
+                            <td>
+                                <a href="UserProfile.html" class="btn-details">View Details</a>
+                            </td>
                         </tr>
                         <tr>
                             <td>ywx</td>
-                            <td>login</td>
-                            <td>2025-11-27 10:30:00</td>
+                            <td>viewer</td>
+                            <td>ywx@gmail.com</td>
+                            <td>2025-11-27</td>
+                            <td>
+                                <a href="UserProfile.html" class="btn-details">View Details</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </section>
 
-        <section class="section-container">
-    <div class="section-tab">Reports</div>
-    
-    <div style="position: absolute; top: 15px; right: 20px;">
-        <a href="ReportPreview.html" target="_blank" class="btn-save" style="text-decoration: none; padding: 8px 15px; font-size: 13px; margin: 0; display: inline-flex; align-items: center; gap: 8px;">
-            <i class="fa-solid fa-file-pdf"></i> Generate PDF
-        </a>
-    </div>
-
-    <div class="chart-container">
-        <div class="y-axis">
-            <span>120</span>
-            <span>100</span>
-            <span>80</span>
-            <span>60</span>
-            <span>40</span>
-            <span>20</span>
-            <span>0</span>
-        </div>
-        <div class="chart-area">
-            <div class="grid-line"></div>
-            <div class="grid-line"></div>
-            <div class="grid-line"></div>
-            <div class="grid-line"></div>
-            <div class="grid-line"></div>
-            <div class="grid-line"></div>
-
-            <svg viewBox="0 0 120 60" preserveAspectRatio="none" class="chart-line">
-                <polyline fill="none" stroke="#b64696" stroke-width="1.5"
-                    points="0,60 10,50 20,20 30,30 40,25 50,5 60,15 70,30 80,35 90,5 100,25 110,15 120,5" />
-            </svg>
-        </div>
-    </div>
-    <div class="x-axis">
-        <span>10</span><span>20</span><span>30</span><span>40</span><span>50</span>
-        <span>60</span><span>70</span><span>80</span><span>90</span><span>100</span><span>110</span><span>120</span>
-    </div>
-</section>
     </div>
 
     <footer class="footer">
@@ -223,9 +188,10 @@
             <p class="copyright">© 1997-2026 MSP - Movie Streaming Platform, Inc.</p>
         </div>
     </footer>
-    <script src="notification.js"></script>
 
     <script src="theme.js"></script>
+
+    <script src="notification.js"></script>
 
 </body>
 

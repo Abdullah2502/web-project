@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movie Details</title>
+    <title>Series Details</title>
     <link rel="stylesheet" href="Dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="theme.js"></script>
@@ -17,14 +17,7 @@
             <button class="video-close-btn" onclick="closePlayer()">
                 <i class="fa-solid fa-xmark"></i> Close Player
             </button>
-            
-            <iframe id="trailerFrame" width="100%" height="100%" 
-                style="display:none; border:none;" 
-                allow="autoplay; encrypted-media" 
-                allowfullscreen>
-            </iframe>
-
-            <div id="staticPlayer" class="static-player-screen">
+            <div class="static-player-screen">
                 <i class="fa-solid fa-circle-play play-icon-large"></i>
                 <div class="player-controls">
                     <i class="fa-solid fa-play control-icon"></i>
@@ -32,7 +25,7 @@
                     <div class="progress-bar">
                         <div class="progress-fill"></div>
                     </div>
-                    <span style="color:white; font-size:12px;">24:10 / 1:45:00</span>
+                    <span style="color:white; font-size:12px;">10:05 / 42:00</span>
                     <i class="fa-solid fa-volume-high control-icon"></i>
                     <i class="fa-solid fa-expand control-icon"></i>
                 </div>
@@ -52,7 +45,7 @@
                 <li><a href="Movies.html" class="hover-glow" style="color:#228EE5;">Movies</a></li>
                 <li><a href="Series.html" class="hover-glow">Series</a></li>
                 <li><a href="Wallet.html" class="hover-glow">Wallet</a></li>
-                <li><a href="forum.html" class="hover-glow">Forum</a></li>
+                <li><a href="adminForum.html" class="hover-glow">Forum</a></li>
             </ul>
 
             <div class="nav-icons">
@@ -65,7 +58,8 @@
                 <div class="notification-wrapper">
                     <button class="icon-btn hover-glow" onclick="toggleNotifications()">
                         <i class="fa-solid fa-bell"></i>
-                        <span style="position:absolute; top:0; right:0; width:8px; height:8px; background:red; border-radius:50%;"></span>
+                        <span
+                            style="position:absolute; top:0; right:0; width:8px; height:8px; background:red; border-radius:50%;"></span>
                     </button>
 
                     <div id="notificationDropdown" class="notification-dropdown">
@@ -74,6 +68,7 @@
                             <span class="mark-read">Mark all as read</span>
                         </div>
                         <div class="notification-list">
+
                             <div class="notif-item">
                                 <div class="notif-content">
                                     <h4>New User Registration</h4>
@@ -81,6 +76,39 @@
                                     <span class="notif-time">2 mins ago</span>
                                 </div>
                             </div>
+
+                            <div class="notif-item">
+                                <div class="notif-content">
+                                    <h4>Movie Approved</h4>
+                                    <p><b>Inception</b> was approved by admin.</p>
+                                    <span class="notif-time">1 hour ago</span>
+                                </div>
+                            </div>
+
+                            <div class="notif-item">
+                                <div class="notif-content">
+                                    <h4>System Alert</h4>
+                                    <p>High server load detected.</p>
+                                    <span class="notif-time">3 hours ago</span>
+                                </div>
+                            </div>
+
+                            <div class="notif-item">
+                                <div class="notif-content">
+                                    <h4>New Comment</h4>
+                                    <p>New comment on <b>Interstellar</b>.</p>
+                                    <span class="notif-time">5 hours ago</span>
+                                </div>
+                            </div>
+
+                            <div class="notif-item">
+                                <div class="notif-content">
+                                    <h4>Payment Received</h4>
+                                    <p>Subscription #9928 processed.</p>
+                                    <span class="notif-time">1 day ago</span>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -93,26 +121,25 @@
     <div id="hero" class="hero-banner">
         <div class="hero-overlay"></div>
         <div class="hero-content">
-            <h1 id="mTitle" style="font-size: 48px; margin-bottom: 10px;">Loading...</h1>
+            <h1 id="sTitle" style="font-size: 48px; margin-bottom: 10px;">Loading...</h1>
             <div style="display: flex; gap: 15px; font-size: 14px; color: #ccc; margin-bottom: 20px;">
-                <span id="mYear">0000</span> |
-                <span id="mDuration">0h 0m</span> |
-                <span id="mRating" style="color:#ffd700;"><i class="fa-solid fa-star"></i> 0.0</span>
+                <span id="sYear">0000</span> |
+                <span id="sSeasons">0 Seasons</span> |
+                <span id="sRating" style="color:#ffd700;"><i class="fa-solid fa-star"></i> 0.0</span>
             </div>
             <div style="display: flex; gap: 15px;">
                 <button class="btn-watch" onclick="openPlayer()">
-                    <i class="fa-solid fa-play"></i> Watch Now
+                    <i class="fa-solid fa-play"></i> Watch S1 E1
                 </button>
-                <button class="btn-save" style="background: rgba(255,255,255,0.2);" onclick="openTrailer()">
-                    <i class="fa-brands fa-youtube" style="margin-right:8px;"></i> Watch Trailer
-                </button>
+                <button class="btn-save" style="background: rgba(255,255,255,0.2);">Episodes</button>
             </div>
         </div>
     </div>
 
     <div class="detail-container">
         <h2>About</h2>
-        <p id="mOverview" style="color:var(--text-muted); line-height:1.6; margin-bottom: 30px;">Loading description...</p>
+        <p id="sOverview" style="color:var(--text-muted); line-height:1.6; margin-bottom: 30px;">Loading description...
+        </p>
 
         <div class="monetization-panel">
             <div class="monetization-header">
@@ -125,7 +152,8 @@
                     </label>
                 </div>
             </div>
-            <p id="statusText" style="font-size:13px; color:#2ecc71;">This content is currently <b>FREE</b> for all users.</p>
+            <p id="statusText" style="font-size:13px; color:#2ecc71;">This content is currently <b>FREE</b> for all
+                users.</p>
             <div id="priceSection" class="price-input-container">
                 <label style="color:var(--text-muted); font-size:14px;">Set Price ($):</label>
                 <input type="number" class="input-field" value="9.99" style="width: 100px;">
@@ -134,10 +162,10 @@
         </div>
 
         <h2>Genres</h2>
-        <div id="mGenres" class="genre-tags" style="margin-bottom: 30px;"></div>
+        <div id="sGenres" class="genre-tags" style="margin-bottom: 30px;"></div>
 
         <h2>Cast</h2>
-        <div id="mCast" class="cast-grid"></div>
+        <div id="sCast" class="cast-grid"></div>
     </div>
 
     <footer class="footer">
@@ -161,51 +189,32 @@
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        const movieId = urlParams.get('id');
+        const seriesId = urlParams.get('id');
         const API_KEY = '96878691f0272aade53fca27ac2a739f';
         const IMG_BASE = 'https://image.tmdb.org/t/p/original';
         const IMG_POSTER = 'https://image.tmdb.org/t/p/w200';
 
-        let trailerKey = null; 
-
         async function loadDetails() {
-            if (!movieId) return;
+            if (!seriesId) return;
             try {
-                // 1. Fetch Details
-                const res = await fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=${API_KEY}&language=en-US`);
+                const res = await fetch(`https://api.themoviedb.org/3/tv/${seriesId}?api_key=${API_KEY}&language=en-US`);
                 const data = await res.json();
-                
-                // 2. Fetch Cast
-                const resCast = await fetch(`https://api.themoviedb.org/3/movie/${movieId}/credits?api_key=${API_KEY}`);
+                const resCast = await fetch(`https://api.themoviedb.org/3/tv/${seriesId}/credits?api_key=${API_KEY}`);
                 const castData = await resCast.json();
 
-                // 3. Fetch Videos (Trailers)
-                const resVideos = await fetch(`https://api.themoviedb.org/3/movie/${movieId}/videos?api_key=${API_KEY}&language=en-US`);
-                const videoData = await resVideos.json();
-                
-                // Find the first YouTube Trailer
-                const trailer = videoData.results.find(vid => vid.type === 'Trailer' && vid.site === 'YouTube');
-                if (trailer) {
-                    trailerKey = trailer.key;
-                }
-
-                // Populate UI
                 document.getElementById('hero').style.backgroundImage = `url('${IMG_BASE + data.backdrop_path}')`;
-                document.getElementById('mTitle').innerText = data.title;
-                document.getElementById('mOverview').innerText = data.overview;
-                document.getElementById('mYear').innerText = data.release_date.split('-')[0];
-                document.getElementById('mRating').innerHTML = `<i class="fa-solid fa-star"></i> ${data.vote_average.toFixed(1)}`;
+                document.getElementById('sTitle').innerText = data.name;
+                document.getElementById('sOverview').innerText = data.overview;
+                document.getElementById('sYear').innerText = data.first_air_date.split('-')[0];
+                document.getElementById('sRating').innerHTML = `<i class="fa-solid fa-star"></i> ${data.vote_average.toFixed(1)}`;
+                document.getElementById('sSeasons').innerText = `${data.number_of_seasons} Season(s)`;
 
-                const h = Math.floor(data.runtime / 60);
-                const m = data.runtime % 60;
-                document.getElementById('mDuration').innerText = `${h}h ${m}m`;
-
-                const gContainer = document.getElementById('mGenres');
+                const gContainer = document.getElementById('sGenres');
                 data.genres.forEach(g => {
                     gContainer.innerHTML += `<span class="genre-tag">${g.name}</span>`;
                 });
 
-                const cContainer = document.getElementById('mCast');
+                const cContainer = document.getElementById('sCast');
                 castData.cast.slice(0, 8).forEach(p => {
                     if (p.profile_path) {
                         cContainer.innerHTML += `
@@ -220,40 +229,8 @@
         }
         loadDetails();
 
-        // --- PLAYER FUNCTIONS ---
-
-        // 1. Open Static Player (Watch Now)
-        function openPlayer() { 
-            document.getElementById('videoModal').style.display = 'flex';
-            document.getElementById('staticPlayer').style.display = 'flex';
-            document.getElementById('trailerFrame').style.display = 'none';
-        }
-
-        // 2. Open YouTube Trailer
-        function openTrailer() {
-            if (!trailerKey) {
-                alert("Sorry, no trailer available for this movie.");
-                return;
-            }
-            document.getElementById('videoModal').style.display = 'flex';
-            document.getElementById('staticPlayer').style.display = 'none';
-            
-            const iframe = document.getElementById('trailerFrame');
-            iframe.style.display = 'block';
-            iframe.src = `https://www.youtube.com/embed/${trailerKey}?autoplay=1`;
-        }
-
-        // 3. Close Player
-        function closePlayer() { 
-            const modal = document.getElementById('videoModal');
-            modal.style.display = 'none';
-            
-            const iframe = document.getElementById('trailerFrame');
-            iframe.src = ''; 
-            iframe.style.display = 'none';
-
-            document.getElementById('staticPlayer').style.display = 'flex';
-        }
+        function openPlayer() { document.getElementById('videoModal').style.display = 'flex'; }
+        function closePlayer() { document.getElementById('videoModal').style.display = 'none'; }
 
         function togglePriceField() {
             const checkBox = document.getElementById('premiumToggle');
@@ -267,14 +244,6 @@
                 priceDiv.classList.remove('active');
                 statusText.innerHTML = "This content is currently <b>FREE</b> for all users.";
                 statusText.style.color = "#2ecc71";
-            }
-        }
-
-        function toggleSearch() {
-            const searchInput = document.getElementById('navSearch');
-            searchInput.classList.toggle('active');
-            if (searchInput.classList.contains('active')) {
-                searchInput.focus();
             }
         }
     </script>
