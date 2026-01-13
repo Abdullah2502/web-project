@@ -1,0 +1,194 @@
+-- ==========================================
+-- 1. DATABASE INITIALIZATION
+-- ==========================================
+CREATE DATABASE IF NOT EXISTS msp_project_final;
+USE msp_project_final;
+
+-- ==========================================
+-- 2. USER MANAGEMENT (Base + Profiles)
+-- ==========================================
+
+-- A. Base User Table (All login info goes here)
+CREATE TABLE users (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    role ENUM('admin', 'producer', 'viewer') NOT NULL,
+    is_active TINYINT(1) DEFAULT 1, -- 1=Active, 0=Banned
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- B. Producer Profile (Extra info: License, Verification)
+CREATE TABLE producers (
+    profile_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL UNIQUE,
+    company_name VARCHAR(100),
+    license_number VARCHAR(100) NOT NULL,
+    document_path VARCHAR(255), -- Path to verification file
+    website VARCHAR(255),
+    verification_status ENUM('pending', 'verified', 'rejected') DEFAULT 'pending',
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+-- C. Viewer Profile (Preferences, Subscription)
+CREATE TABLE viewers (
+    profile_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL UNIQUE,
+    full_name VARCHAR(100),
+    favorite_genres VARCHAR(255),
+    subscription_plan ENUM('free', 'premium') DEFAULT 'free',
+    subscription_expiry DATE NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+-- D. Admin Profile (Optional, for internal logging)
+CREATE TABLE admins (
+    profile_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL UNIQUE,
+    department VARCHAR(50),
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+-- ==========================================
+-- 3. FINANCIALS
+-- ==========================================
+
+-- Wallets: Stores balance for Producers (earnings) or Users
+CREATE TABLE wallets (
+    wallet_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL UNIQUE,
+    balance DECIMAL(10, 2) DEFAULT 0.00,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+-- Transactions: Tracks every dummy payment or earning
+CREATE TABLE transactions (
+    transaction_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL, -- The person paying or receiving
+    amount DECIMAL(10, 2) NOT NULL,
+    type ENUM('subscription_pay', 'movie_purchase', 'producer_payout', 'producer_fee') NOT NULL,
+    status ENUM('success', 'failed', 'pending') DEFAULT 'success',
+    description VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+-- ==========================================
+-- 4. CONTENT MANAGEMENT (Movies & Series)
+-- ==========================================
+
+-- Movies Table
+CREATE TABLE movies (
+    movie_id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    release_year INT,
+    genre VARCHAR(100),
+    poster_url VARCHAR(255),
+    video_url VARCHAR(255), -- Main movie file
+    trailer_url VARCHAR(255),
+    duration_minutes INT,
+    is_premium TINYINT(1) DEFAULT 0, -- 0=Free, 1=Paid
+    price DECIMAL(10, 2) DEFAULT 0.00,
+    uploaded_by INT NOT NULL, -- Link to user_id (Producer/Admin)
+    approval_status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (uploaded_by) REFERENCES users(user_id)
+);
+
+-- Series Table
+CREATE TABLE series (
+    series_id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    release_year INT,
+    genre VARCHAR(100),
+    poster_url VARCHAR(255),
+    trailer_url VARCHAR(255),
+    is_premium TINYINT(1) DEFAULT 0,
+    uploaded_by INT NOT NULL,
+    approval_status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (uploaded_by) REFERENCES users(user_id)
+);
+
+-- Episodes Table (Linked to Series)
+CREATE TABLE episodes (
+    episode_id INT AUTO_INCREMENT PRIMARY KEY,
+    series_id INT NOT NULL,
+    season_number INT NOT NULL,
+    episode_number INT NOT NULL,
+    title VARCHAR(255),
+    video_url VARCHAR(255),
+    duration_minutes INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (series_id) REFERENCES series(series_id) ON DELETE CASCADE
+);
+
+-- ==========================================
+-- 5. ENGAGEMENT (Habits & Ratings)
+-- ==========================================
+
+-- Watch History: Tracks progress for "Resume Watching" feature
+CREATE TABLE watch_history (
+    history_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    content_type ENUM('movie', 'episode') NOT NULL,
+    content_id INT NOT NULL, -- ID from movies or episodes table
+    watched_minutes INT DEFAULT 0,
+    is_completed TINYINT(1) DEFAULT 0,
+    last_watched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+-- Ratings & Reviews
+CREATE TABLE ratings (
+    rating_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    content_type ENUM('movie', 'series') NOT NULL,
+    content_id INT NOT NULL,
+    rating_value TINYINT CHECK (rating_value BETWEEN 1 AND 5),
+    review_text TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+-- ==========================================
+-- 6. SOCIAL (Forum & Chat)
+-- ==========================================
+
+-- Forum Threads (Topics)
+CREATE TABLE forum_threads (
+    thread_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    content TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+-- Forum Comments (Replies)
+CREATE TABLE forum_comments (
+    comment_id INT AUTO_INCREMENT PRIMARY KEY,
+    thread_id INT NOT NULL,
+    user_id INT NOT NULL,
+    content TEXT NOT NULL,
+    parent_comment_id INT DEFAULT NULL, -- For nested replies
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (thread_id) REFERENCES forum_threads(thread_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+-- Chat Messages (Direct Messaging)
+CREATE TABLE chat_messages (
+    message_id INT AUTO_INCREMENT PRIMARY KEY,
+    sender_id INT NOT NULL,
+    receiver_id INT NOT NULL,
+    message TEXT NOT NULL,
+    is_read TINYINT(1) DEFAULT 0,
+    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (sender_id) REFERENCES users(user_id),
+    FOREIGN KEY (receiver_id) REFERENCES users(user_id)
+);
