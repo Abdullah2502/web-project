@@ -4,6 +4,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const icon = sunBtn ? sunBtn.querySelector('i') : null;
     const logo = document.querySelector('.logo-img');
 
+    // Helper: Swaps filename keeping the correct folder path
+    function setLogo(filename) {
+        if (!logo) return;
+        // 1. Get the current full path (e.g., http://localhost/assets/logo.png)
+        const currentSrc = logo.src;
+        // 2. Remove the file name at the end to get the folder (e.g., http://localhost/assets/)
+        const folderPath = currentSrc.substring(0, currentSrc.lastIndexOf('/') + 1);
+        // 3. Set new source
+        logo.src = folderPath + filename;
+    }
+
     // Function to set Light Mode
     function enableLightMode() {
         document.body.classList.add('light-mode');
@@ -11,7 +22,10 @@ document.addEventListener('DOMContentLoaded', () => {
             icon.classList.remove('fa-sun');
             icon.classList.add('fa-moon');
         }
-        if(logo) logo.src = 'logo-dark.png';
+        
+        // SWITCH TO DARK LOGO
+        setLogo('logo-dark.png');
+        
         localStorage.setItem('theme', 'light');
     }
 
@@ -22,10 +36,12 @@ document.addEventListener('DOMContentLoaded', () => {
             icon.classList.remove('fa-moon');
             icon.classList.add('fa-sun');
         }
-        if(logo) logo.src = 'logo.png';
+        
+        // SWITCH TO WHITE LOGO
+        setLogo('logo.png');
+        
         localStorage.setItem('theme', 'dark');
     }
-
 
     if (currentTheme === 'light') {
         enableLightMode();
@@ -42,26 +58,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-
 /* --- Toggle Search Input --- */
 function toggleSearch() {
     const searchInput = document.getElementById('navSearch');
-    searchInput.classList.toggle('active');
-    
-    // Auto-focus the input when opened
-    if (searchInput.classList.contains('active')) {
-        searchInput.focus();
+    if (searchInput) {
+        searchInput.classList.toggle('active');
+        if (searchInput.classList.contains('active')) {
+            searchInput.focus();
+        }
     }
 }
 
-// Optional: Close search if clicking outside
 document.addEventListener('click', function(e) {
     const container = document.querySelector('.search-container');
     const input = document.getElementById('navSearch');
     
-    // If click is outside container AND input is active
-    if (!container.contains(e.target) && input.classList.contains('active')) {
-        // Only close if the input is empty
+    if (container && input && !container.contains(e.target) && input.classList.contains('active')) {
         if(input.value === '') {
             input.classList.remove('active');
         }

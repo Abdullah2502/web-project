@@ -16,7 +16,7 @@
 }
 
 body.light-mode {
-    --bg-body: #f0f2f5;
+    --bg-body: #EEEEEE;
     --bg-card: #ffffff;
     --bg-element: #f8f9fa;
     --bg-navbar: rgba(255, 255, 255, 0.85);
