@@ -48,7 +48,46 @@ if ($result_series && $result_series->num_rows > 0) {
     }
 }
 
-// --- 5. PREPARE HERO SLIDESHOW ITEMS ---
+// --- 5. FETCH CONTINUE WATCHING (Logged In Only) ---
+$continue_watching = [];
+if ($is_logged_in) {
+    $sql_history = "
+        SELECT 
+            h.content_type, 
+            h.content_id, 
+            h.progress_seconds,
+            -- Get Title
+            COALESCE(m.title, s_ep.title, s_direct.title) as title,
+            -- Get Poster
+            COALESCE(m.poster_url, s_ep.poster_url, s_direct.poster_url) as poster_url,
+            -- Get IDs
+            m.movie_id,
+            COALESCE(s_ep.series_id, s_direct.series_id) as final_series_id,
+            -- Get Duration
+            COALESCE(m.duration_minutes, e.duration_minutes, 45) as duration_mins
+        FROM watch_history h
+        LEFT JOIN movies m ON h.content_type = 'movie' AND h.content_id = m.movie_id
+        LEFT JOIN episodes e ON h.content_type = 'episode' AND h.content_id = e.episode_id
+        LEFT JOIN series s_ep ON e.series_id = s_ep.series_id
+        LEFT JOIN series s_direct ON h.content_type = 'series' AND h.content_id = s_direct.series_id
+        WHERE h.user_id = ?
+        ORDER BY h.last_watched_at DESC
+        LIMIT 5";
+
+    $stmt = $conn->prepare($sql_history);
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $res_hist = $stmt->get_result();
+
+    while ($row = $res_hist->fetch_assoc()) {
+        if (!empty($row['title'])) {
+            $continue_watching[] = $row;
+        }
+    }
+    $stmt->close();
+}
+
+// --- 6. PREPARE HERO SLIDESHOW ITEMS ---
 $heroItems = [];
 
 // Add top 3 movies
@@ -76,7 +115,7 @@ if (empty($heroItems)) {
     ];
 }
 
-// Helper to render card
+// Helper to render STANDARD card (Trending sections)
 function renderCard($item, $type)
 {
     $imgSrc = $item['poster_url'];
@@ -87,13 +126,56 @@ function renderCard($item, $type)
     $idKey = ($type === 'movie') ? 'movie_id' : 'series_id';
     $id = $item[$idKey];
 
-    $link = "window.location.href='viewer/watchTrailer.php?id=" . $id . "&type=" . $type . "'";
+    // Standard cards go to Trailer/Detail pages
+    $destinationPage = ($type === 'series') ? 'viewer/watchTrailer1.php' : 'viewer/watchTrailer.php';
+
+    $link = "window.location.href='" . $destinationPage . "?id=" . $id . "'";
     $premiumBadge = ($item['is_premium'] == 1) ? '<span style="position:absolute; top:10px; right:10px; background:#ffd700; color:#000; padding:2px 6px; font-size:10px; border-radius:4px; font-weight:bold; z-index:2;">PREMIUM</span>' : '';
 
     echo '
     <div class="card" onclick="' . $link . '">
         ' . $premiumBadge . '
         <img src="' . htmlspecialchars($imgSrc) . '" alt="' . htmlspecialchars($item['title']) . '" onerror="this.src=\'assets/logo.png\'">
+        <div class="card-caption">' . htmlspecialchars($item['title']) . '</div>
+        <button class="play-btn"><i class="fa-solid fa-play"></i></button>
+    </div>';
+}
+
+// Helper to render CONTINUE WATCHING Card (Direct to Player)
+function renderContinueCard($item)
+{
+    $imgSrc = $item['poster_url'];
+    if (!filter_var($imgSrc, FILTER_VALIDATE_URL)) {
+        $imgSrc = './' . $imgSrc;
+    }
+
+    // Logic to determine link and ID
+    $isMovie = ($item['content_type'] === 'movie');
+
+    // FIX: Link directly to player pages
+    $linkPage = $isMovie ? 'viewer/watchMovie.php' : 'viewer/watchSeries.php';
+    $id = $isMovie ? $item['movie_id'] : $item['final_series_id'];
+
+    // Calculate Progress %
+    $duration = isset($item['duration_mins']) ? intval($item['duration_mins']) : 0;
+    if ($duration <= 0) $duration = 45; // Default fallback
+
+    $totalSeconds = $duration * 60;
+    $percent = 0;
+
+    if ($totalSeconds > 0) {
+        $percent = ($item['progress_seconds'] / $totalSeconds) * 100;
+        if ($percent > 100) $percent = 100;
+    }
+
+    echo '
+    <div class="card" onclick="window.location.href=\'' . $linkPage . '?id=' . $id . '\'">
+        <img src="' . htmlspecialchars($imgSrc) . '" alt="' . htmlspecialchars($item['title']) . '" onerror="this.src=\'assets/logo.png\'">
+        
+        <div class="progress-bar-container">
+            <div class="progress-fill" style="width: ' . $percent . '%;"></div>
+        </div>
+        
         <div class="card-caption">' . htmlspecialchars($item['title']) . '</div>
         <button class="play-btn"><i class="fa-solid fa-play"></i></button>
     </div>';
@@ -247,8 +329,13 @@ function renderCard($item, $type)
             border: 1px solid var(--bg-card);
             border-radius: 4px;
             display: none;
-            z-index: 1001;
-            overflow: hidden;
+        }
+
+        .hero-title {
+            font-size: 2.5rem;
+        }
+
+        .card {
             min-width: 140px;
         }
 
@@ -522,6 +609,23 @@ function renderCard($item, $type)
             color: white;
         }
 
+        /* Progress Bar Styles for Continue Watching */
+        .progress-bar-container {
+            position: absolute;
+            bottom: 35px;
+            /* Above the caption */
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #ffee06;
+            transition: width 0.3s;
+        }
+
         /* CHARACTER SECTION STYLES */
         .char-row {
             display: flex;
@@ -714,6 +818,7 @@ function renderCard($item, $type)
                 <input type="text" class="search-input" placeholder="Search..." id="searchInput">
                 <i class="fa-solid fa-magnifying-glass" id="searchIcon"></i>
             </div>
+
             <i class="fa-regular fa-bell"></i>
             <?php if ($is_logged_in): ?>
                 <div class="user-container" id="userArea">
@@ -736,7 +841,9 @@ function renderCard($item, $type)
     </nav>
 
     <header class="hero" id="heroSlider">
-        <?php foreach ($heroItems as $index => $item): ?>
+        <?php foreach ($heroItems as $index => $item):
+            $targetFile = ($item['content_type'] === 'series') ? 'viewer/watchTrailer1.php' : 'viewer/watchTrailer.php';
+        ?>
             <div class="hero-slide <?php echo $index === 0 ? 'active' : ''; ?>"
                 data-title="<?php echo htmlspecialchars($item['title']); ?>"
                 data-type="<?php echo $item['content_type']; ?>">
@@ -749,7 +856,7 @@ function renderCard($item, $type)
                     </div>
                     <h1 class="hero-title"><?php echo htmlspecialchars($item['title']); ?></h1>
                     <p class="hero-desc" id="desc-<?php echo $index; ?>">Loading details...</p>
-                    <button class="btn-watch" onclick="window.location.href='viewer/watchTrailer.php?id=<?php echo $item['id']; ?>&type=<?php echo $item['content_type']; ?>'">
+                    <button class="btn-watch" onclick="window.location.href='<?php echo $targetFile; ?>?id=<?php echo $item['id']; ?>&type=<?php echo $item['content_type']; ?>'">
                         <i class="fa-solid fa-play"></i> Watch Trailer
                     </button>
                 </div>
@@ -820,6 +927,19 @@ function renderCard($item, $type)
             ?>
         </div>
     </div>
+
+    <?php if ($is_logged_in && !empty($continue_watching)): ?>
+        <div class="container">
+            <div class="section-title">Continue Watching</div>
+            <div class="movie-row">
+                <?php
+                foreach ($continue_watching as $item) {
+                    renderContinueCard($item);
+                }
+                ?>
+            </div>
+        </div>
+    <?php endif; ?>
 
     <div class="container">
         <div class="section-title">Popular Characters</div>
