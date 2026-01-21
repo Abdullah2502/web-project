@@ -141,7 +141,7 @@
         <a href="../index.php">
             <img src="../assets/logo.png" style="height:40px;" alt="MSP">
         </a>
-        <a href="prodRegister.html" style="text-decoration: none;">
+        <a href="prodRegister.php" style="text-decoration: none;">
             <button type="button" class="btn-auth btn-secondary">
                 Register as Producer
             </button>
