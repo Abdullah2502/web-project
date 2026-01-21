@@ -11,20 +11,17 @@ $movie_id = intval($_GET['id']);
 
 // 2. HANDLE DELETE MOVIE
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete_movie'])) {
-    // First, get file paths to delete them from server
     $sql_files = "SELECT video_url, poster_url FROM movies WHERE movie_id = ?";
     $stmt_files = $conn->prepare($sql_files);
     $stmt_files->bind_param("i", $movie_id);
     $stmt_files->execute();
     $files = $stmt_files->get_result()->fetch_assoc();
 
-    // Delete Physical Files
     if ($files) {
         if (file_exists("../" . $files['video_url'])) unlink("../" . $files['video_url']);
         if (file_exists("../" . $files['poster_url'])) unlink("../" . $files['poster_url']);
     }
 
-    // Delete Database Record
     $sql_del = "DELETE FROM movies WHERE movie_id = ?";
     $stmt_del = $conn->prepare($sql_del);
     $stmt_del->bind_param("i", $movie_id);
@@ -40,16 +37,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete_movie'])) {
 // 3. HANDLE MONETIZATION UPDATE
 $msg = "";
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_monetization'])) {
-    $price = $_POST['price'];
     $is_premium = isset($_POST['is_premium']) ? 1 : 0;
-    if (!$is_premium) $price = 0.00;
+
+    // If premium, use the posted price. If free, force price to 0.00
+    $price = $is_premium ? floatval($_POST['price']) : 0.00;
 
     $sql = "UPDATE movies SET price = ?, is_premium = ? WHERE movie_id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("dii", $price, $is_premium, $movie_id);
-    
+
     if ($stmt->execute()) {
-        $msg = "<script>alert('Monetization settings updated!');</script>";
+        $msg = "<script>alert('Monetization settings saved!');</script>";
     } else {
         $msg = "<script>alert('Error updating settings.');</script>";
     }
@@ -98,32 +96,157 @@ $video_file = !empty($movie['video_url']) ? "../" . $movie['video_url'] : '';
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="../assets/theme.js"></script>
     <style>
-        /* Modal Styles */
-        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); }
-        .modal-content { background-color: #1a1a1a; margin: 5% auto; padding: 25px; border: 1px solid #333; width: 50%; max-width: 600px; border-radius: 10px; color: #fff; position: relative; }
-        .close { position: absolute; right: 20px; top: 15px; font-size: 28px; cursor: pointer; color: #aaa; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; color: #ccc; font-size: 14px; }
-        .form-input { width: 100%; padding: 10px; background: #333; border: 1px solid #444; color: #fff; border-radius: 4px; }
-        .btn-submit { background: #e50914; color: white; padding: 12px; width: 100%; border: none; cursor: pointer; border-radius: 4px; font-size: 16px; margin-top: 10px; }
-        
-        /* Cast Grid */
-        .cast-grid { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; }
-        .cast-grid::-webkit-scrollbar { height: 8px; background: #222; }
-        .cast-grid::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
-        .cast-card { min-width: 100px; text-align: center; }
-        .cast-img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 5px; border: 2px solid #e50914; }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+        }
 
-        /* API Tools */
-        .api-tools { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .btn-small { background: #333; color: white; border: 1px solid #555; padding: 5px 10px; cursor: pointer; font-size: 12px; border-radius: 4px; }
-        
-        /* Edit & Delete Buttons */
-        .btn-edit { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 5px 10px; cursor: pointer; border-radius: 4px; margin-left: 10px; font-size: 14px; }
-        .btn-edit:hover { background: rgba(255,255,255,0.2); }
-        
-        .btn-delete { background: #dc3545; border: 1px solid #b02a37; color: white; padding: 5px 10px; cursor: pointer; border-radius: 4px; margin-left: 5px; font-size: 14px; }
-        .btn-delete:hover { background: #bb2d3b; }
+        .modal-content {
+            background-color: #1a1a1a;
+            margin: 5% auto;
+            padding: 25px;
+            border: 1px solid #333;
+            width: 50%;
+            max-width: 600px;
+            border-radius: 10px;
+            color: #fff;
+            position: relative;
+        }
+
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #aaa;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #ccc;
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            background: #333;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 4px;
+        }
+
+        .btn-submit {
+            background: #e50914;
+            color: white;
+            padding: 12px;
+            width: 100%;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        .cast-grid {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .cast-grid::-webkit-scrollbar {
+            height: 8px;
+            background: #222;
+        }
+
+        .cast-grid::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 4px;
+        }
+
+        .cast-card {
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .cast-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 5px;
+            border: 2px solid #e50914;
+        }
+
+        .api-tools {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-small {
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
+        .btn-edit {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-left: 10px;
+            font-size: 14px;
+        }
+
+        .btn-edit:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            border: 1px solid #b02a37;
+            color: white;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-left: 5px;
+            font-size: 14px;
+        }
+
+        .btn-delete:hover {
+            background: #bb2d3b;
+        }
+
+        /* Fix for hidden button issue */
+        .price-input-container {
+            display: none;
+            margin-top: 15px;
+        }
+
+        .price-input-container.active {
+            display: block;
+        }
     </style>
 </head>
 
@@ -155,22 +278,22 @@ $video_file = !empty($movie['video_url']) ? "../" . $movie['video_url'] : '';
                 <li><a href="Wallet.html" class="hover-glow">Wallet</a></li>
             </ul>
             <div class="nav-icons">
-                 <a href="AdminProfile.html" class="icon-btn hover-glow"><i class="fa-solid fa-user"></i></a>
+                <a href="AdminProfile.html" class="icon-btn hover-glow"><i class="fa-solid fa-user"></i></a>
             </div>
         </div>
     </nav>
 
     <div id="hero" class="hero-banner" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.3), #020b1f), url('<?php echo $poster_url; ?>'); background-size: cover; background-position: center;">
         <div class="hero-content">
-            
+
             <input type="hidden" id="phpTitle" value="<?php echo htmlspecialchars($movie['title']); ?>">
             <input type="hidden" id="phpYear" value="<?php echo $movie['release_year']; ?>">
 
             <div style="display:flex; align-items:center;">
                 <h1 id="mTitle" style="font-size: 48px; margin-bottom: 10px;"><?php echo htmlspecialchars($movie['title']); ?></h1>
-                
+
                 <button class="btn-edit" onclick="openEditModal()"><i class="fa-solid fa-pen"></i> Edit</button>
-                
+
                 <form method="POST" onsubmit="return confirm('⚠️ WARNING: Are you sure you want to delete this movie?\nThis action cannot be undone and will delete the video file from the server.');" style="display:inline;">
                     <input type="hidden" name="delete_movie" value="1">
                     <button type="submit" class="btn-delete"><i class="fa-solid fa-trash"></i> Delete</button>
@@ -185,7 +308,7 @@ $video_file = !empty($movie['video_url']) ? "../" . $movie['video_url'] : '';
                     <i class="fa-solid fa-star"></i> <?php echo $movie['is_premium'] ? 'Premium' : 'Free'; ?>
                 </span>
             </div>
-            
+
             <div style="display: flex; gap: 15px;">
                 <?php if (!empty($movie['video_url'])): ?>
                     <button class="btn-watch" onclick="openLocalPlayer()">
@@ -221,15 +344,18 @@ $video_file = !empty($movie['video_url']) ? "../" . $movie['video_url'] : '';
                         </label>
                     </div>
                 </div>
+
                 <p id="statusText" style="font-size:13px; color:<?php echo $movie['is_premium'] ? '#ffd700' : '#2ecc71'; ?>;">
                     <?php echo $movie['is_premium'] ? 'This content is <b>PREMIUM</b>. Users must pay to watch.' : 'This content is currently <b>FREE</b> for all users.'; ?>
                 </p>
+
                 <div id="priceSection" class="price-input-container <?php echo $movie['is_premium'] ? 'active' : ''; ?>">
                     <label style="color:var(--text-muted); font-size:14px;">Set Price ($):</label>
-                    <div style="display:flex; gap:10px;">
-                        <input type="number" step="0.01" name="price" class="input-field" value="<?php echo $movie['price']; ?>" style="width: 100px;">
-                        <button type="submit" class="btn-save" style="margin-top:0; padding:8px 20px;">Update</button>
-                    </div>
+                    <input type="number" step="0.01" name="price" class="input-field" value="<?php echo $movie['price']; ?>" style="width: 100px;">
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <button type="submit" class="btn-save" style="padding:10px 25px;">Save Changes</button>
                 </div>
             </form>
         </div>
@@ -287,9 +413,16 @@ $video_file = !empty($movie['video_url']) ? "../" . $movie['video_url'] : '';
             }
         }
 
-        function openEditModal() { document.getElementById('editModal').style.display = 'block'; }
-        function closeEditModal() { document.getElementById('editModal').style.display = 'none'; }
-        window.onclick = function(e) { if(e.target == document.getElementById('editModal')) closeEditModal(); }
+        function openEditModal() {
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+        window.onclick = function(e) {
+            if (e.target == document.getElementById('editModal')) closeEditModal();
+        }
 
         function openLocalPlayer() {
             document.getElementById('videoModal').style.display = 'flex';
@@ -298,73 +431,95 @@ $video_file = !empty($movie['video_url']) ? "../" . $movie['video_url'] : '';
             document.getElementById('localPlayer').play();
         }
 
-        function closePlayer() { 
+        function closePlayer() {
             const modal = document.getElementById('videoModal');
             modal.style.display = 'none';
             const video = document.getElementById('localPlayer');
-            video.pause(); video.currentTime = 0; video.style.display = 'none';
+            video.pause();
+            video.currentTime = 0;
+            video.style.display = 'none';
             const iframe = document.getElementById('trailerFrame');
-            iframe.src = ''; iframe.style.display = 'none';
+            iframe.src = '';
+            iframe.style.display = 'none';
         }
 
-        const API_KEY = '96878691f0272aade53fca27ac2a739f'; 
+        const API_KEY = '96878691f0272aade53fca27ac2a739f';
         const IMG_POSTER = 'https://image.tmdb.org/t/p/w200';
         let foundTmdbId = null;
 
         async function fetchApiData(isManual = false) {
             const castContainer = document.getElementById('mCast');
             let tmdbId = null;
-            if(isManual) {
+            if (isManual) {
                 const manualId = document.getElementById('manualTmdbId').value;
-                if(!manualId) { alert("Enter TMDB ID"); return; }
+                if (!manualId) {
+                    alert("Enter TMDB ID");
+                    return;
+                }
                 tmdbId = manualId;
             } else {
                 const title = document.getElementById('phpTitle').value;
                 const year = document.getElementById('phpYear').value;
-                if(!title) return;
+                if (!title) return;
                 try {
                     let res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(title)}&primary_release_year=${year}`);
                     let data = await res.json();
-                    if(!data.results || data.results.length === 0) {
+                    if (!data.results || data.results.length === 0) {
                         res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(title)}`);
                         data = await res.json();
                     }
-                    if(data.results && data.results.length > 0) tmdbId = data.results[0].id;
-                    else { castContainer.innerHTML = '<p style="color:#666;">Not found in API.</p>'; return; }
-                } catch(e) { console.error(e); }
+                    if (data.results && data.results.length > 0) tmdbId = data.results[0].id;
+                    else {
+                        castContainer.innerHTML = '<p style="color:#666;">Not found in API.</p>';
+                        return;
+                    }
+                } catch (e) {
+                    console.error(e);
+                }
             }
-            if(!tmdbId) return;
+            if (!tmdbId) return;
             foundTmdbId = tmdbId;
             try {
                 const resCast = await fetch(`https://api.themoviedb.org/3/movie/${tmdbId}/credits?api_key=${API_KEY}`);
                 const castData = await resCast.json();
                 castContainer.innerHTML = '';
-                if(castData.cast) {
+                if (castData.cast) {
                     castData.cast.slice(0, 10).forEach(p => {
                         if (p.profile_path) {
                             castContainer.innerHTML += `<div class="cast-card"><img src="${IMG_POSTER + p.profile_path}" class="cast-img"><p style="font-size:12px; font-weight:bold; color:#ccc;">${p.name}</p></div>`;
                         }
                     });
                 }
-            } catch(e) {}
+            } catch (e) {}
         }
 
         async function fetchTrailer() {
-            if(!foundTmdbId) { await fetchApiData(); if(!foundTmdbId) { alert("Could not find trailer in API."); return; } }
+            if (!foundTmdbId) {
+                await fetchApiData();
+                if (!foundTmdbId) {
+                    alert("Could not find trailer in API.");
+                    return;
+                }
+            }
             try {
                 const res = await fetch(`https://api.themoviedb.org/3/movie/${foundTmdbId}/videos?api_key=${API_KEY}`);
                 const data = await res.json();
                 const trailer = data.results.find(v => v.type === 'Trailer' && v.site === 'YouTube');
-                if(trailer) {
+                if (trailer) {
                     document.getElementById('videoModal').style.display = 'flex';
                     document.getElementById('localPlayer').style.display = 'none';
                     const iframe = document.getElementById('trailerFrame');
                     iframe.style.display = 'block';
                     iframe.src = `https://www.youtube.com/embed/${trailer.key}?autoplay=1`;
-                } else { alert("No YouTube trailer found for this movie."); }
-            } catch(e) { alert("API Error"); }
+                } else {
+                    alert("No YouTube trailer found for this movie.");
+                }
+            } catch (e) {
+                alert("API Error");
+            }
         }
         fetchApiData(false);
     </script>
 </body>
+
 </html>

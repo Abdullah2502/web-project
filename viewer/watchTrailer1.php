@@ -37,6 +37,8 @@ if (!$series) {
 }
 
 $seriesTitle = $series['title'];
+$seriesYear = $series['release_year'];
+$seriesPrice = $series['price']; // Added Price
 $isPremiumContent = ($series['is_premium'] == 1);
 $type = $isPremiumContent ? 'Premium' : 'Free';
 
@@ -307,33 +309,58 @@ $avgRating = (count($reviews) > 0) ? round($totalStars / count($reviews), 1) : "
     <script>
         const apiKey = '96878691f0272aade53fca27ac2a739f';
         const title = <?php echo json_encode($seriesTitle); ?>;
+        const year = <?php echo json_encode($seriesYear); ?>;
         const seriesId = <?php echo $series_id; ?>;
+        const seriesPrice = <?php echo json_encode($seriesPrice); ?>;
         const isPremium = <?php echo json_encode($isPremiumContent); ?>;
         const userPlan = <?php echo json_encode($membership); ?>;
         const isLoggedIn = <?php echo json_encode($isLoggedIn); ?>;
 
+        // --- AUTH & PAYMENT LOGIC ---
         function handleWatch() {
+            // 1. GUEST
             if (!isLoggedIn) {
                 window.location.href = '../auth/auth.php';
                 return;
             }
-            if (isPremium && userPlan !== 'premium') {
+
+            // 2. MONETIZED (Premium Content)
+            if (isPremium) {
                 Swal.fire({
-                    icon: 'lock',
-                    title: 'Premium Only',
-                    text: 'Upgrade your plan to watch this series.',
-                    confirmButtonText: 'Upgrade',
+                    icon: 'info',
+                    title: 'Premium Series',
+                    text: `This series is monetized. You need to pay $${seriesPrice} to watch it.`,
+                    showCancelButton: true,
+                    confirmButtonText: 'Pay Now',
                     confirmButtonColor: '#e50914'
+                }).then((r) => {
+                    if (r.isConfirmed) {
+                        window.location.href = `dummyTransactions.php?id=${seriesId}&type=series&price=${seriesPrice}`;
+                    }
+                });
+                return;
+            }
+
+            // 3. STANDARD CONTENT
+            if (userPlan === 'free') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Subscription Required',
+                    text: 'You need an active subscription to watch this series.',
+                    showCancelButton: true,
+                    confirmButtonText: 'Subscribe Now',
+                    confirmButtonColor: '#2ecc71'
                 }).then((r) => {
                     if (r.isConfirmed) window.location.href = 'subscription.php';
                 });
             } else {
+                // 4. APPROVED
                 window.location.href = `watchSeries.php?id=${seriesId}`;
             }
         }
 
         // Fetch API Data
-        fetch(`https://api.themoviedb.org/3/search/tv?api_key=${apiKey}&query=${encodeURIComponent(title)}`)
+        fetch(`https://api.themoviedb.org/3/search/tv?api_key=${apiKey}&query=${encodeURIComponent(title)}&first_air_date_year=${year}`)
             .then(res => res.json())
             .then(data => {
                 if (data.results.length > 0) {
@@ -352,16 +379,20 @@ $avgRating = (count($reviews) > 0) ? round($totalStars / count($reviews), 1) : "
                     // Cast
                     const castDiv = document.getElementById('seriesCast');
                     castDiv.innerHTML = '';
-                    data.credits.cast.slice(0, 3).forEach(p => {
-                        const img = p.profile_path ? `https://image.tmdb.org/t/p/w200${p.profile_path}` : '../assets/user.png';
-                        castDiv.innerHTML += `<div class="person-item"><img src="${img}"><b>${p.name}</b></div>`;
-                    });
+                    if (data.credits && data.credits.cast) {
+                        data.credits.cast.slice(0, 3).forEach(p => {
+                            const img = p.profile_path ? `https://image.tmdb.org/t/p/w200${p.profile_path}` : '../assets/user.png';
+                            castDiv.innerHTML += `<div class="person-item"><img src="${img}"><b>${p.name}</b></div>`;
+                        });
+                    }
                     // Creator
                     if (data.created_by.length > 0) {
                         const c = data.created_by[0];
                         const img = c.profile_path ? `https://image.tmdb.org/t/p/w200${c.profile_path}` : '../assets/user.png';
                         document.getElementById('seriesCreator').innerHTML = `<div class="person-item"><img src="${img}"><b>${c.name}</b></div>`;
                     }
+                } else {
+                    document.getElementById('trailerContainer').innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100%;color:#666;">Series Not Found in TMDB</div>';
                 }
             });
 

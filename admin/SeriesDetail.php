@@ -16,14 +16,14 @@ $msg = "";
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_monetization'])) {
     $price = $_POST['price'];
     $is_premium = isset($_POST['is_premium']) ? 1 : 0;
-    
+
     // Force price to 0 if not premium
     if (!$is_premium) $price = 0.00;
 
     $sql = "UPDATE series SET price = ?, is_premium = ? WHERE series_id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("dii", $price, $is_premium, $series_id);
-    
+
     if ($stmt->execute()) {
         $msg = "<script>alert('Monetization settings updated!');</script>";
     } else {
@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_details'])) {
     $desc = $_POST['description'];
     $year = $_POST['release_year'];
     $genre = $_POST['genre'];
-    
+
     $sql = "UPDATE series SET title = ?, description = ?, release_year = ?, genre = ? WHERE series_id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ssisi", $title, $desc, $year, $genre, $series_id);
@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['upload_episode'])) {
     $season = $_POST['season'];
     $episode_num = $_POST['episode_num'];
     $duration = $_POST['duration'];
-    
+
     if (!empty($_FILES['video_file']['name'])) {
         $target_dir = "../uploads/episodes/";
         if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
@@ -103,7 +103,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['upload_episode'])) {
             $path = "uploads/episodes/" . $new_name;
             $stmt = $conn->prepare("INSERT INTO episodes (series_id, season_number, episode_number, title, video_url, duration_minutes) VALUES (?,?,?,?,?,?)");
             $stmt->bind_param("iiisss", $series_id, $season, $episode_num, $ep_title, $path, $duration);
-            if ($stmt->execute()) $msg = "<script>alert('Episode uploaded!');</script>";
+            $stmt->execute();
+            $msg = "<script>alert('Episode uploaded!');</script>";
         }
     }
 }
@@ -130,6 +131,7 @@ $poster_url = !empty($series['poster_url']) ? "../" . $series['poster_url'] : '.
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title><?php echo htmlspecialchars($series['title']); ?></title>
@@ -138,27 +140,192 @@ $poster_url = !empty($series['poster_url']) ? "../" . $series['poster_url'] : '.
     <script src="../assets/theme.js"></script>
     <style>
         /* Shared Styles */
-        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); }
-        .modal-content { background-color: #1a1a1a; margin: 5% auto; padding: 25px; border: 1px solid #333; width: 50%; max-width: 600px; border-radius: 10px; color: #fff; position: relative; }
-        .close { position: absolute; right: 20px; top: 15px; font-size: 28px; cursor: pointer; color: #aaa; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; color: #ccc; font-size: 14px; }
-        .form-input { width: 100%; padding: 10px; background: #333; border: 1px solid #444; color: #fff; border-radius: 4px; }
-        .btn-submit { background: #e50914; color: white; padding: 12px; width: 100%; border: none; cursor: pointer; border-radius: 4px; font-size: 16px; margin-top: 10px; }
-        .upload-box { background: #1f2940; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #333; }
-        .episode-item { background: #161d2f; padding: 15px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #e50914; margin-bottom: 10px; }
-        .form-row { display: flex; gap: 10px; margin-bottom: 10px; }
-        .input-dark { background: #0b1326; border: 1px solid #444; color: white; padding: 10px; border-radius: 4px; width: 100%; }
-        .cast-grid { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; }
-        .cast-grid::-webkit-scrollbar { height: 8px; background: #222; }
-        .cast-grid::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
-        .cast-card { min-width: 100px; text-align: center; }
-        .cast-img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 5px; border: 2px solid #e50914; }
-        .btn-edit { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 5px 10px; cursor: pointer; border-radius: 4px; margin-left: 10px; font-size: 14px; }
-        .btn-delete { background: #dc3545; border: 1px solid #b02a37; color: white; padding: 5px 10px; cursor: pointer; border-radius: 4px; margin-left: 5px; font-size: 14px; }
-        .btn-del-sm { background: transparent; color: #dc3545; border: none; cursor: pointer; font-size: 16px; margin-left: 10px; }
-        .api-tools { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .btn-small { background: #333; color: white; border: 1px solid #555; padding: 5px 10px; cursor: pointer; font-size: 12px; border-radius: 4px; }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+
+        .modal-content {
+            background-color: #1a1a1a;
+            margin: 5% auto;
+            padding: 25px;
+            border: 1px solid #333;
+            width: 50%;
+            max-width: 600px;
+            border-radius: 10px;
+            color: #fff;
+            position: relative;
+        }
+
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #aaa;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #ccc;
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            background: #333;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 4px;
+        }
+
+        .btn-submit {
+            background: #e50914;
+            color: white;
+            padding: 12px;
+            width: 100%;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        .upload-box {
+            background: #1f2940;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border: 1px solid #333;
+        }
+
+        .episode-item {
+            background: #161d2f;
+            padding: 15px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #e50914;
+            margin-bottom: 10px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .input-dark {
+            background: #0b1326;
+            border: 1px solid #444;
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            width: 100%;
+        }
+
+        .cast-grid {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .cast-grid::-webkit-scrollbar {
+            height: 8px;
+            background: #222;
+        }
+
+        .cast-grid::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 4px;
+        }
+
+        .cast-card {
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .cast-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 5px;
+            border: 2px solid #e50914;
+        }
+
+        .btn-edit {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-left: 10px;
+            font-size: 14px;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            border: 1px solid #b02a37;
+            color: white;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-left: 5px;
+            font-size: 14px;
+        }
+
+        .btn-del-sm {
+            background: transparent;
+            color: #dc3545;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 10px;
+        }
+
+        .api-tools {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-small {
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
+        /* Fix for hidden button issue */
+        .price-input-container {
+            display: none;
+            margin-top: 15px;
+        }
+
+        .price-input-container.active {
+            display: block;
+        }
     </style>
 </head>
 
@@ -192,9 +359,9 @@ $poster_url = !empty($series['poster_url']) ? "../" . $series['poster_url'] : '.
 
             <div style="display:flex; align-items:center;">
                 <h1 id="sTitle" style="font-size: 48px; margin-bottom: 10px;"><?php echo htmlspecialchars($series['title']); ?></h1>
-                
+
                 <button class="btn-edit" onclick="openEditModal()"><i class="fa-solid fa-pen"></i> Edit</button>
-                
+
                 <form method="POST" onsubmit="return confirm('Delete entire series?');" style="display:inline;">
                     <input type="hidden" name="delete_series" value="1">
                     <button type="submit" class="btn-delete"><i class="fa-solid fa-trash"></i> Delete Series</button>
@@ -208,7 +375,7 @@ $poster_url = !empty($series['poster_url']) ? "../" . $series['poster_url'] : '.
                     <i class="fa-solid fa-star"></i> <?php echo $series['is_premium'] ? 'Premium' : 'Free'; ?>
                 </span>
             </div>
-            
+
             <div style="display: flex; gap: 15px;">
                 <button class="btn-watch" onclick="document.querySelector('.episode-item .btn-play')?.click()">
                     <i class="fa-solid fa-play"></i> Watch S1 E1
@@ -239,12 +406,14 @@ $poster_url = !empty($series['poster_url']) ? "../" . $series['poster_url'] : '.
                 <p id="statusText" style="font-size:13px; color:<?php echo $series['is_premium'] ? '#ffd700' : '#2ecc71'; ?>;">
                     <?php echo $series['is_premium'] ? 'This content is <b>PREMIUM</b>.' : 'This content is currently <b>FREE</b>.'; ?>
                 </p>
+
                 <div id="priceSection" class="price-input-container <?php echo $series['is_premium'] ? 'active' : ''; ?>">
                     <label style="color:var(--text-muted); font-size:14px;">Set Price ($):</label>
-                    <div style="display:flex; gap:10px;">
-                        <input type="number" step="0.01" name="price" class="input-field" value="<?php echo $series['price']; ?>" style="width: 100px;">
-                        <button type="submit" class="btn-save" style="margin-top:0; padding:8px 20px;">Save Settings</button>
-                    </div>
+                    <input type="number" step="0.01" name="price" class="input-field" value="<?php echo $series['price']; ?>" style="width: 100px;">
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <button type="submit" class="btn-save" style="padding:10px 25px;">Save Settings</button>
                 </div>
             </form>
         </div>
@@ -269,14 +438,14 @@ $poster_url = !empty($series['poster_url']) ? "../" . $series['poster_url'] : '.
         <h2>Episodes</h2>
         <div class="episode-list">
             <?php if ($result_eps->num_rows > 0): ?>
-                <?php while($ep = $result_eps->fetch_assoc()): ?>
+                <?php while ($ep = $result_eps->fetch_assoc()): ?>
                     <div class="episode-item">
                         <div>
                             <h4 style="margin:0;">S<?php echo $ep['season_number']; ?> E<?php echo $ep['episode_number']; ?> - <?php echo htmlspecialchars($ep['title']); ?></h4>
                             <small style="color:#888;">Duration: <?php echo $ep['duration_minutes']; ?> min</small>
                         </div>
                         <div style="display:flex; align-items:center;">
-                            <button class="btn-play" onclick="playEpisode('<?php echo '../'.$ep['video_url']; ?>')" style="background:transparent; border:none; color:#2ecc71; cursor:pointer; font-size:18px; margin-right:15px;">
+                            <button class="btn-play" onclick="playEpisode('<?php echo '../' . $ep['video_url']; ?>')" style="background:transparent; border:none; color:#2ecc71; cursor:pointer; font-size:18px; margin-right:15px;">
                                 <i class="fa-solid fa-circle-play"></i>
                             </button>
                             <form method="POST" onsubmit="return confirm('Delete episode?');" style="margin:0;">
@@ -299,7 +468,9 @@ $poster_url = !empty($series['poster_url']) ? "../" . $series['poster_url'] : '.
                 <button onclick="fetchCast(true)" class="btn-small">Link</button>
             </div>
         </h2>
-        <div id="sCast" class="cast-grid"><p style="color:#666; font-size:12px;">Searching...</p></div>
+        <div id="sCast" class="cast-grid">
+            <p style="color:#666; font-size:12px;">Searching...</p>
+        </div>
     </div>
 
     <div id="editModal" class="modal">
@@ -319,14 +490,25 @@ $poster_url = !empty($series['poster_url']) ? "../" . $series['poster_url'] : '.
         </div>
     </div>
 
-    <footer class="footer"><div class="footer-container"><p class="copyright">© 1997-2026 MSP - Movie Streaming Platform, Inc.</p></div></footer>
+    <footer class="footer">
+        <div class="footer-container">
+            <p class="copyright">© 1997-2026 MSP - Movie Streaming Platform, Inc.</p>
+        </div>
+    </footer>
 
     <script src="../assets/notification.js"></script>
     <script>
-        function openEditModal() { document.getElementById('editModal').style.display = 'block'; }
-        function closeEditModal() { document.getElementById('editModal').style.display = 'none'; }
-        window.onclick = function(e) { if(e.target == document.getElementById('editModal')) closeEditModal(); }
-        
+        function openEditModal() {
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+        window.onclick = function(e) {
+            if (e.target == document.getElementById('editModal')) closeEditModal();
+        }
+
         function togglePriceField() {
             const checkBox = document.getElementById('premiumToggle');
             const priceDiv = document.getElementById('priceSection');
@@ -349,52 +531,62 @@ $poster_url = !empty($series['poster_url']) ? "../" . $series['poster_url'] : '.
             video.style.display = 'block';
             video.play();
         }
+
         function closePlayer() {
             const modal = document.getElementById('videoModal');
             modal.style.display = 'none';
             const video = document.getElementById('localPlayer');
-            video.pause(); video.currentTime = 0; video.src = "";
+            video.pause();
+            video.currentTime = 0;
+            video.src = "";
         }
 
-        const API_KEY = '96878691f0272aade53fca27ac2a739f'; 
+        const API_KEY = '96878691f0272aade53fca27ac2a739f';
         const IMG_POSTER = 'https://image.tmdb.org/t/p/w200';
         async function fetchCast(isManual = false) {
             const castContainer = document.getElementById('sCast');
             let tmdbId = null;
-            if(isManual) {
+            if (isManual) {
                 const manualId = document.getElementById('manualTmdbId').value;
-                if(!manualId) { alert("Enter TMDB ID"); return; }
+                if (!manualId) {
+                    alert("Enter TMDB ID");
+                    return;
+                }
                 tmdbId = manualId;
             } else {
                 const title = document.getElementById('phpSeriesTitle').value;
                 const year = document.getElementById('phpSeriesYear').value;
-                if(!title) return;
+                if (!title) return;
                 try {
                     let res = await fetch(`https://api.themoviedb.org/3/search/tv?api_key=${API_KEY}&query=${encodeURIComponent(title)}&first_air_date_year=${year}`);
                     let data = await res.json();
-                    if(!data.results || data.results.length === 0) {
+                    if (!data.results || data.results.length === 0) {
                         res = await fetch(`https://api.themoviedb.org/3/search/tv?api_key=${API_KEY}&query=${encodeURIComponent(title)}`);
                         data = await res.json();
                     }
-                    if(data.results && data.results.length > 0) tmdbId = data.results[0].id;
-                    else { castContainer.innerHTML = '<p style="color:#666;">Not found in API.</p>'; return; }
-                } catch(e) {}
+                    if (data.results && data.results.length > 0) tmdbId = data.results[0].id;
+                    else {
+                        castContainer.innerHTML = '<p style="color:#666;">Not found in API.</p>';
+                        return;
+                    }
+                } catch (e) {}
             }
-            if(!tmdbId) return;
+            if (!tmdbId) return;
             try {
                 const resCast = await fetch(`https://api.themoviedb.org/3/tv/${tmdbId}/credits?api_key=${API_KEY}`);
                 const castData = await resCast.json();
                 castContainer.innerHTML = '';
-                if(castData.cast) {
+                if (castData.cast) {
                     castData.cast.slice(0, 10).forEach(p => {
                         if (p.profile_path) {
                             castContainer.innerHTML += `<div class="cast-card"><img src="${IMG_POSTER + p.profile_path}" class="cast-img"><p style="font-size:12px; font-weight:bold; color:#ccc;">${p.name}</p></div>`;
                         }
                     });
                 }
-            } catch(e) {}
+            } catch (e) {}
         }
         fetchCast(false);
     </script>
 </body>
+
 </html>

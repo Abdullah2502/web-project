@@ -2,6 +2,15 @@
 session_start();
 require_once '../config/db_connect.php';
 
+// --- 0. SERVER ERROR CHECK (File too large) ---
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && empty($_POST) && empty($_FILES) && isset($_SERVER['CONTENT_LENGTH']) && $_SERVER['CONTENT_LENGTH'] > 0) {
+    echo "<script>
+            alert('❌ SERVER ERROR: The file is larger than the server allows.\\n\\nPlease check your php.ini settings for upload_max_filesize and post_max_size.');
+            window.location.href='Series.php';
+          </script>";
+    exit();
+}
+
 // --- 1. HANDLE SERIES CREATE ---
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['upload_series'])) {
     $title = $_POST['title'];
@@ -21,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['upload_series'])) {
     }
 
     // Insert into DB (Notice: No video_url needed here)
+    // Note: Admin uploads are auto-approved
     $sql = "INSERT INTO series (title, description, release_year, genre, poster_url, uploaded_by, approval_status) 
             VALUES (?, ?, ?, ?, ?, ?, 'approved')";
     $stmt = $conn->prepare($sql);
@@ -34,7 +44,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['upload_series'])) {
 }
 
 // --- 2. SEARCH & FETCH ---
-$where = ["1=1"];
+// Base condition: Only show approved series
+$where = ["approval_status = 'approved'"];
 $params = [];
 $types = "";
 
@@ -179,6 +190,10 @@ $result = $stmt->get_result();
                         </div>
                     </a>
                 <?php endwhile; ?>
+
+                <?php if ($result->num_rows == 0): ?>
+                    <p style="color:#888; text-align:center; width:100%;">No approved series found.</p>
+                <?php endif; ?>
             </div>
         </section>
     </div>

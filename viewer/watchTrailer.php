@@ -40,6 +40,8 @@ if (!$movie) {
 }
 
 $movieTitle = $movie['title'];
+$movieYear = $movie['release_year'];
+$moviePrice = $movie['price']; // Added Price
 $isContentPremium = ($movie['is_premium'] == 1);
 $type = $isContentPremium ? 'Premium' : 'Free';
 
@@ -53,7 +55,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review'])) {
         $ins->bind_param("iisis", $movie_id, $user_id, $username, $rating, $comment);
         $ins->execute();
         
-        // Refresh to show comment
         header("Location: watchTrailer.php?id=" . $movie_id);
         exit();
     }
@@ -83,64 +84,29 @@ $avgRating = (count($reviews) > 0) ? round($totalStars / count($reviews), 1) : "
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        /* --- THEME VARIABLES --- */
-        :root {
-            --bg-body: #020b1f;
-            --bg-nav: rgba(2, 11, 31, 0.95);
-            --bg-card: #1f2940;
-            --bg-meta: rgba(255, 255, 255, 0.03);
-            --text-main: white;
-            --text-sub: #ccc;
-            --border-color: rgba(255, 255, 255, 0.1);
-            --input-bg: #020b1f;
-        }
-
-        [data-theme="light"] {
-            --bg-body: #f0f2f5;
-            --bg-nav: rgba(255, 255, 255, 0.95);
-            --bg-card: #ffffff;
-            --bg-meta: #eef0f3;
-            --text-main: #1c1e21;
-            --text-sub: #444;
-            --border-color: #ddd;
-            --input-bg: #ffffff;
-        }
-
+        :root { --bg-body: #020b1f; --bg-nav: rgba(2, 11, 31, 0.95); --bg-card: #1f2940; --bg-meta: rgba(255, 255, 255, 0.03); --text-main: white; --text-sub: #ccc; --border-color: rgba(255, 255, 255, 0.1); --input-bg: #020b1f; }
+        [data-theme="light"] { --bg-body: #f0f2f5; --bg-nav: rgba(255, 255, 255, 0.95); --bg-card: #ffffff; --bg-meta: #eef0f3; --text-main: #1c1e21; --text-sub: #444; --border-color: #ddd; --input-bg: #ffffff; }
         * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif;}
         body {background-color: var(--bg-body); color: var(--text-main); overflow-x:hidden; transition: background 0.3s, color 0.3s;}
-        
         .navbar { display:flex; justify-content: space-between; align-items: center; padding:15px 5%; background: var(--bg-nav); border-bottom: 1px solid var(--border-color); }
         .container { max-width: 1400px; margin: 0 auto; padding: 20px 5% 50px; }
         .back-link { color: #e50914; text-decoration: none; display: inline-block; margin-bottom: 15px; font-size: 14px; }
         #theme-toggle { cursor: pointer; font-size: 18px; transition: 0.3s; }
         #theme-toggle:hover { color: #e50914; }
-
         .status-badge { display: inline-block; padding: 5px 15px; border-radius: 4px; font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: 15px; }
         .badge-Free { background: #2ecc71; color: white; }
         .badge-Premium { background: #ffd700; color: #000; }
-
         h1 { font-size: 42px; margin-bottom: 20px; font-weight: 700; }
-
-        /* Video / Trailer Area */
-        .player-section { 
-            width: 100%; height: 600px; margin-bottom: 35px; background: #000;
-            border-radius: 15px; overflow: hidden;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-            border: 1px solid var(--border-color);
-            position: relative;
-        }
+        .player-section { width: 100%; height: 600px; margin-bottom: 35px; background: #000; border-radius: 15px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8); border: 1px solid var(--border-color); position: relative; }
         iframe, #mspPlayer { width: 100%; height: 100%; border:none; }
-
         .actions { display: flex; gap: 15px; margin-bottom: 40px; }
         .btn { padding: 14px 30px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; border: none; display: flex; align-items: center; gap: 12px; font-size: 16px; }
         .btn-main { background: #e50914; color: white; }
         .btn-main:hover { background: #b20710; }
         .btn-secondary { background: rgba(255,255,255,0.1); color: var(--text-main); border: 1px solid var(--border-color); }
-
         .content-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 40px; margin-bottom: 60px; }
         .info-card h3 { color: #e50914; margin-bottom: 15px; font-size: 22px; text-transform: uppercase; }
         .info-card p { color: var(--text-sub); line-height: 1.8; margin-bottom: 25px; }
-
         .comment-section { background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border-color); }
         .rating-box { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.1); border-radius: 8px; }
         .stars-input { color: #f1c40f; font-size: 24px; cursor: pointer; }
@@ -150,26 +116,20 @@ $avgRating = (count($reviews) > 0) ? round($totalStars / count($reviews), 1) : "
         .comment-item { padding: 12px 0; border-bottom: 1px solid var(--border-color); }
         .comment-item b { color: #e50914; font-size: 14px; }
         .comment-item p { color: var(--text-sub); }
-
         .suggestion-section { margin-top: 50px; border-top: 1px solid var(--border-color); padding-top: 40px; }
         .suggestion-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
         .suggest-card { background: var(--bg-card); border-radius: 10px; overflow: hidden; cursor: pointer; transition: 0.3s; border: 1px solid var(--border-color); }
         .suggest-card img { width: 100%; height: 280px; object-fit: cover; }
         .suggest-card-body { padding: 10px; text-align: center; font-weight: 600; color: var(--text-main); font-size: 14px; }
-
         .meta-info { display: flex; flex-direction: column; gap: 20px; background: var(--bg-meta); padding: 30px; border-radius: 12px; height: fit-content; border: 1px solid var(--border-color);}
         .meta-item span { display: block; color: #888; font-size: 13px; margin-bottom: 10px; }
         .person-item { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
         .person-item img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #e50914; background: #333; }
         .person-item b { font-size: 15px; color: var(--text-main); }
-
         .premium-lock-msg { background: rgba(229, 9, 20, 0.1); border: 1px dashed #e50914; padding: 15px; border-radius: 8px; text-align: center; color: var(--text-main); font-size: 14px; }
-        
-        /* SweetAlert overrides */
         .swal2-popup { background: #0b1326 !important; color: white !important; border: 1px solid rgba(255,255,255,0.1) !important; }
         .swal2-title, .swal2-html-container { color: white !important; }
         .swal2-confirm { background-color: #e50914 !important; }
-
         @media(max-width: 992px) { .content-grid { grid-template-columns: 1fr; } .player-section { height: 40vh; } }
     </style>
 </head>
@@ -215,7 +175,6 @@ $avgRating = (count($reviews) > 0) ? round($totalStars / count($reviews), 1) : "
                     <h3>Ratings & Community</h3>
                     <div class="rating-box">
                         <div><span>Rating</span><div class="avg-num"><?php echo $avgRating; ?></div></div>
-                        
                         <?php if ($userMembership === 'premium'): ?>
                         <div style="margin-left: auto; text-align: right;">
                             <span>Rate:</span>
@@ -279,51 +238,70 @@ $avgRating = (count($reviews) > 0) ? round($totalStars / count($reviews), 1) : "
         
         // PHP Data to JS
         const movieTitle = <?php echo json_encode($movieTitle); ?>;
+        const movieYear = <?php echo json_encode($movieYear); ?>;
         const movieId = <?php echo $movie_id; ?>;
+        const moviePrice = <?php echo json_encode($moviePrice); ?>;
         const isContentPremium = <?php echo json_encode($isContentPremium); ?>;
         const userPlan = <?php echo json_encode($userMembership); ?>;
         const isLoggedIn = <?php echo json_encode($isLoggedIn); ?>;
 
-        // --- 1. HANDLE WATCH BUTTON CLICK ---
+        // --- AUTH & PAYMENT LOGIC ---
         function handleWatchFull() {
+            // 1. GUEST: Redirect to Login
             if(!isLoggedIn) {
                 window.location.href = '../auth/auth.php';
                 return;
             }
 
-            if (isContentPremium && userPlan !== 'premium') {
+            // 2. MONETIZED CONTENT: Redirect to Transaction Page
+            if (isContentPremium) {
                 Swal.fire({
-                    icon: 'lock',
-                    title: 'Subscription Needed',
-                    text: 'This movie is for Premium members only.',
+                    icon: 'info',
+                    title: 'Premium Content',
+                    text: `This movie is monetized. You need to pay $${moviePrice} to watch it.`,
                     showCancelButton: true,
-                    confirmButtonText: 'Upgrade',
-                    cancelButtonText: 'Close',
+                    confirmButtonText: 'Pay Now',
                     confirmButtonColor: '#e50914'
                 }).then((result) => {
-                    if (result.isConfirmed) window.location.href = 'subscription.php';
+                    if (result.isConfirmed) {
+                        // Pass movie ID and Type to transaction page
+                        window.location.href = `dummyTransactions.php?id=${movieId}&type=movie&price=${moviePrice}`;
+                    }
+                });
+                return; 
+            }
+
+            // 3. STANDARD CONTENT: Check Subscription
+            if (userPlan === 'free') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Subscription Required',
+                    text: 'You need an active subscription to watch movies.',
+                    showCancelButton: true,
+                    confirmButtonText: 'Subscribe Now',
+                    confirmButtonColor: '#2ecc71'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = 'subscription.php';
+                    }
                 });
             } else {
-                // Go to Watch Page with ID
+                // 4. APPROVED: Go to Watch Page
                 window.location.href = `watchMovie.php?id=${movieId}`;
             }
         }
 
-        // --- 2. FETCH TRAILER & METADATA FROM API ---
+        // --- API & UI LOGIC ---
         async function fetchApiData() {
             try {
-                // Search movie by title
-                const searchRes = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(movieTitle)}`);
+                const searchRes = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(movieTitle)}&primary_release_year=${movieYear}`);
                 const searchData = await searchRes.json();
 
                 if(searchData.results && searchData.results.length > 0) {
                     const tmdbId = searchData.results[0].id;
-
-                    // Get Details (Credits + Videos + Similar)
                     const detailRes = await fetch(`https://api.themoviedb.org/3/movie/${tmdbId}?api_key=${API_KEY}&append_to_response=credits,videos,similar`);
                     const data = await detailRes.json();
 
-                    // A. Set Trailer
                     const trailer = data.videos.results.find(v => v.type === 'Trailer' && v.site === 'YouTube');
                     if(trailer) {
                         document.getElementById('trailerContainer').innerHTML = `
@@ -333,7 +311,6 @@ $avgRating = (count($reviews) > 0) ? round($totalStars / count($reviews), 1) : "
                         document.getElementById('trailerContainer').innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100%;color:#666;">No Trailer Available</div>';
                     }
 
-                    // B. Set Director
                     const director = data.credits.crew.find(p => p.job === 'Director');
                     if(director) {
                         const img = director.profile_path ? IMG_POSTER + director.profile_path : 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
@@ -342,7 +319,6 @@ $avgRating = (count($reviews) > 0) ? round($totalStars / count($reviews), 1) : "
                         `;
                     }
 
-                    // C. Set Cast
                     const castContainer = document.getElementById('movieCast');
                     castContainer.innerHTML = '';
                     data.credits.cast.slice(0, 3).forEach(p => {
@@ -350,13 +326,11 @@ $avgRating = (count($reviews) > 0) ? round($totalStars / count($reviews), 1) : "
                         castContainer.innerHTML += `<div class="person-item"><img src="${img}"><b>${p.name}</b></div>`;
                     });
 
-                    // D. Set Suggestions
                     const suggestGrid = document.getElementById('suggestionGrid');
                     data.similar.results.slice(0, 4).forEach(m => {
                         if(m.poster_path) {
                             suggestGrid.innerHTML += `
-                                <div class="suggest-card">
-                                    <img src="https://image.tmdb.org/t/p/w400${m.poster_path}">
+                                <div class="suggest-card" onclick="location.href='watchTrailer.php?id=${m.id}'"> <img src="https://image.tmdb.org/t/p/w400${m.poster_path}">
                                     <div class="suggest-card-body">${m.title}</div>
                                 </div>
                             `;
@@ -368,7 +342,6 @@ $avgRating = (count($reviews) > 0) ? round($totalStars / count($reviews), 1) : "
             }
         }
 
-        // --- 3. THEME LOGIC ---
         const themeToggle = document.getElementById('theme-toggle');
         const body = document.body;
         const applyTheme = (t) => {
@@ -381,7 +354,6 @@ $avgRating = (count($reviews) > 0) ? round($totalStars / count($reviews), 1) : "
         });
         applyTheme(localStorage.getItem('theme'));
 
-        // --- 4. RATING LOGIC ---
         if (userPlan === 'premium') {
             const starIcons = document.querySelectorAll('#starRatingInput i');
             starIcons.forEach(s => s.onclick = () => {
@@ -400,7 +372,6 @@ $avgRating = (count($reviews) > 0) ? round($totalStars / count($reviews), 1) : "
             };
         }
 
-        // Init
         fetchApiData();
     </script>
 </body>

@@ -136,7 +136,7 @@ for ($m = 1; $m <= 12; $m++) {
         <h1 class="welcome-text">Welcome Admin,</h1>
 
         <section class="stats-container">
-            <a href="Users.html" class="stat-card hover-glow-card">
+            <a href="Users.php" class="stat-card hover-glow-card">
                 <h3>Total Users</h3>
                 <p><?php echo number_format($total_users); ?></p>
             </a>

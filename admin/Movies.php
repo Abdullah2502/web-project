@@ -16,15 +16,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['upload_movie'])) {
     $title = $_POST['title'];
     $year = $_POST['year'];
     $genre = $_POST['genre'];
-    $description = $title; 
-    $price = 0.00; 
+    $description = $title;
+    $price = 0.00;
     $is_premium = 0;
     $uploaded_by = $_SESSION['user_id'] ?? 1;
 
     // File Upload Logic
     $poster_path = "";
     $video_path = "";
-    
+
     // Poster
     if (!empty($_FILES['poster']['name'])) {
         $target_dir = "../uploads/thumbnails/";
@@ -43,11 +43,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['upload_movie'])) {
         $video_path = "uploads/movies/" . $video_name;
     }
 
+    // NOTE: Default status for admin upload is 'approved'
     $sql = "INSERT INTO movies (title, description, release_year, genre, poster_url, video_url, is_premium, price, uploaded_by, approval_status) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved')";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ssisssidi", $title, $description, $year, $genre, $poster_path, $video_path, $is_premium, $price, $uploaded_by);
-    
+
     if ($stmt->execute()) {
         echo "<script>alert('Movie Uploaded Successfully!'); window.location.href='Movies.php';</script>";
     } else {
@@ -55,8 +56,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['upload_movie'])) {
     }
 }
 
-// --- 2. SEARCH & FETCH ---
-$where = ["1=1"];
+// --- 2. SEARCH & FETCH (UPDATED: Only Approved Movies) ---
+// Base condition is now checking for 'approved' status
+$where = ["approval_status = 'approved'"];
 $params = [];
 $types = "";
 
@@ -206,25 +208,25 @@ $result = $stmt->get_result();
             <div class="section-tab">Library</div>
 
             <div class="movie-grid" id="movie-grid-container">
-                <?php while($row = $result->fetch_assoc()): ?>
-                <?php 
-                        $badgeClass = $row['is_premium'] ? 'badge-premium' : 'badge-free';
-                        $badgeText = $row['is_premium'] ? 'PREMIUM' : 'FREE';
-                        $poster = !empty($row['poster_url']) ? "../" . $row['poster_url'] : '../assets/logo.png';
+                <?php while ($row = $result->fetch_assoc()): ?>
+                    <?php
+                    $badgeClass = $row['is_premium'] ? 'badge-premium' : 'badge-free';
+                    $badgeText = $row['is_premium'] ? 'PREMIUM' : 'FREE';
+                    $poster = !empty($row['poster_url']) ? "../" . $row['poster_url'] : '../assets/logo.png';
                     ?>
-                <a href="MovieDetail.php?id=<?php echo $row['movie_id']; ?>" class="movie-card">
-                    <div class="badge-overlay <?php echo $badgeClass; ?>"><?php echo $badgeText; ?></div>
-                    <img src="<?php echo $poster; ?>" alt="<?php echo $row['title']; ?>" class="movie-poster">
-                    <div class="movie-overlay">
-                        <h3 class="overlay-title"><?php echo htmlspecialchars($row['title']); ?></h3>
-                        <p class="overlay-genre"><?php echo htmlspecialchars($row['genre']); ?></p>
-                        <p style="color:#ccc; font-size:12px; margin-top:10px;">Click for Details</p>
-                    </div>
-                </a>
+                    <a href="MovieDetail.php?id=<?php echo $row['movie_id']; ?>" class="movie-card">
+                        <div class="badge-overlay <?php echo $badgeClass; ?>"><?php echo $badgeText; ?></div>
+                        <img src="<?php echo $poster; ?>" alt="<?php echo $row['title']; ?>" class="movie-poster">
+                        <div class="movie-overlay">
+                            <h3 class="overlay-title"><?php echo htmlspecialchars($row['title']); ?></h3>
+                            <p class="overlay-genre"><?php echo htmlspecialchars($row['genre']); ?></p>
+                            <p style="color:#ccc; font-size:12px; margin-top:10px;">Click for Details</p>
+                        </div>
+                    </a>
                 <?php endwhile; ?>
 
-                <?php if($result->num_rows == 0): ?>
-                <p style="color:#888; text-align:center; width:100%;">No movies found in database.</p>
+                <?php if ($result->num_rows == 0): ?>
+                    <p style="color:#888; text-align:center; width:100%;">No approved movies found.</p>
                 <?php endif; ?>
             </div>
         </section>
@@ -237,53 +239,53 @@ $result = $stmt->get_result();
     </footer>
 
     <script>
-    // 1. Populate Years
-    function populateYears(elementId) {
-        const select = document.getElementById(elementId);
-        const currentYear = new Date().getFullYear();
-        for (let i = currentYear; i >= 1970; i--) {
-            let option = document.createElement('option');
-            option.value = i;
-            option.text = i;
-            select.appendChild(option);
-        }
-    }
-    populateYears('search-year');
-    populateYears('upload-year');
-
-    // 2. Button Filename Feedback
-    document.getElementById('posterFileInput').addEventListener('change', function() {
-        if (this.files[0]) {
-            const btn = document.getElementById('posterBtn');
-            btn.innerHTML = '<i class="fa-solid fa-check"></i> ' + this.files[0].name;
-            btn.style.borderColor = "#28a745";
-            btn.style.color = "#28a745";
-        }
-    });
-
-    document.getElementById('seriesFileInput').addEventListener('change', function() {
-        if (this.files[0]) {
-            const btn = document.getElementById('videoBtn');
-            btn.innerHTML = '<i class="fa-solid fa-check"></i> ' + this.files[0].name;
-            btn.style.borderColor = "#28a745";
-            btn.style.color = "#28a745";
-        }
-    });
-
-    // 3. POPUP ALERT: Check File Size BEFORE Submitting
-    document.querySelector('form[method="POST"]').onsubmit = function(e) {
-        const videoInput = document.getElementById('seriesFileInput');
-        const maxSize = 2.5 * 1024 * 1024 * 1024; // 2GB in bytes
-
-        if (videoInput.files && videoInput.files[0]) {
-            if (videoInput.files[0].size > maxSize) {
-                alert("⚠️ POPUP ALERT: The selected file is too large!\n\nLimit: 2.5GB\nYour File: " + (videoInput
-                    .files[0].size / (1024 * 1024 * 1024)).toFixed(2) + " GB");
-                e.preventDefault(); // Stop the crash
-                return false;
+        // 1. Populate Years
+        function populateYears(elementId) {
+            const select = document.getElementById(elementId);
+            const currentYear = new Date().getFullYear();
+            for (let i = currentYear; i >= 1970; i--) {
+                let option = document.createElement('option');
+                option.value = i;
+                option.text = i;
+                select.appendChild(option);
             }
         }
-    };
+        populateYears('search-year');
+        populateYears('upload-year');
+
+        // 2. Button Filename Feedback
+        document.getElementById('posterFileInput').addEventListener('change', function() {
+            if (this.files[0]) {
+                const btn = document.getElementById('posterBtn');
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> ' + this.files[0].name;
+                btn.style.borderColor = "#28a745";
+                btn.style.color = "#28a745";
+            }
+        });
+
+        document.getElementById('seriesFileInput').addEventListener('change', function() {
+            if (this.files[0]) {
+                const btn = document.getElementById('videoBtn');
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> ' + this.files[0].name;
+                btn.style.borderColor = "#28a745";
+                btn.style.color = "#28a745";
+            }
+        });
+
+        // 3. POPUP ALERT: Check File Size BEFORE Submitting
+        document.querySelector('form[method="POST"]').onsubmit = function(e) {
+            const videoInput = document.getElementById('seriesFileInput');
+            const maxSize = 2.5 * 1024 * 1024 * 1024; // 2GB in bytes
+
+            if (videoInput.files && videoInput.files[0]) {
+                if (videoInput.files[0].size > maxSize) {
+                    alert("⚠️ POPUP ALERT: The selected file is too large!\n\nLimit: 2.5GB\nYour File: " + (videoInput
+                        .files[0].size / (1024 * 1024 * 1024)).toFixed(2) + " GB");
+                    e.preventDefault(); // Stop the crash
+                    return false;
+                }
+            }
+        };
     </script>
     <script src="../assets/theme.js"></script>
 </body>
