@@ -172,8 +172,8 @@ $transactions = $conn->query($sql_trans);
                     </button>
                 </div>
                 <a href="AdminProfile.php" class="icon-btn hover-glow"><i class="fa-solid fa-user"></i></a>
-                <button class="icon-btn hover-glow"><i class="fa-solid fa-sun"></i></button>
                 <a href="../actions/logout.php" class="icon-btn hover-glow" style="color: #e50914;"><i class="fa-solid fa-right-from-bracket"></i></a>
+                <button class="icon-btn hover-glow"><i class="fa-solid fa-sun"></i></button>
             </div>
         </div>
     </nav>

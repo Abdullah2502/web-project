@@ -141,6 +141,9 @@ function time_elapsed_string($datetime, $full = false)
         </div>
 
         <a href="AdminProfile.php" class="icon-btn hover-glow"><i class="fa-solid fa-user"></i></a>
+        <a href="../actions/logout.php" class="icon-btn hover-glow" title="Logout" style="color: #e50914;">
+          <i class="fa-solid fa-right-from-bracket"></i>
+        </a>
         <button class="icon-btn hover-glow"><i class="fa-solid fa-sun"></i></button>
       </div>
     </div>

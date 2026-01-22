@@ -26,8 +26,15 @@ $result = $conn->query($sql);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* Simple helper classes for status colors */
-        .text-success { color: #2ecc71; font-weight: bold; }
-        .text-danger { color: #e74c3c; font-weight: bold; }
+        .text-success {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+
+        .text-danger {
+            color: #e74c3c;
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -56,7 +63,7 @@ $result = $conn->query($sql);
                         <i class="fa-solid fa-magnifying-glass"></i>
                     </button>
                 </div>
-                
+
                 <div class="notification-wrapper">
                     <button class="icon-btn hover-glow" onclick="toggleNotifications()">
                         <i class="fa-solid fa-bell"></i>
@@ -79,10 +86,10 @@ $result = $conn->query($sql);
                         </div>
                     </div>
                 </div>
-                
+
                 <a href="AdminProfile.php" class="icon-btn hover-glow"><i class="fa-solid fa-user"></i></a>
-                <button class="icon-btn hover-glow"><i class="fa-solid fa-sun"></i></button>
                 <a href="../actions/logout.php" class="icon-btn hover-glow" style="color: #e50914;"><i class="fa-solid fa-right-from-bracket"></i></a>
+                <button class="icon-btn hover-glow"><i class="fa-solid fa-sun"></i></button>
             </div>
         </div>
     </nav>
@@ -105,28 +112,28 @@ $result = $conn->query($sql);
                         </tr>
                     </thead>
                     <tbody>
-                        <?php 
+                        <?php
                         if ($result && $result->num_rows > 0) {
                             while ($row = $result->fetch_assoc()) {
                                 // Logic for active status display
                                 $statusClass = ($row['is_active'] == 1) ? 'text-success' : 'text-danger';
                                 $statusText = ($row['is_active'] == 1) ? 'Active' : 'Banned';
-                                
+
                                 // Link to detail view
                                 $detailLink = "UserProfile.php?id=" . $row['user_id'];
                         ?>
-                            <tr>
-                                <td>#<?php echo htmlspecialchars($row['user_id']); ?></td>
-                                <td><?php echo htmlspecialchars($row['username']); ?></td>
-                                <td style="text-transform: capitalize;"><?php echo htmlspecialchars($row['role']); ?></td>
-                                <td><?php echo htmlspecialchars($row['email']); ?></td>
-                                <td><?php echo date("Y-m-d", strtotime($row['created_at'])); ?></td>
-                                <td class="<?php echo $statusClass; ?>"><?php echo $statusText; ?></td>
-                                <td>
-                                    <a href="<?php echo $detailLink; ?>" class="btn-details">View Details</a>
-                                </td>
-                            </tr>
-                        <?php 
+                                <tr>
+                                    <td>#<?php echo htmlspecialchars($row['user_id']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['username']); ?></td>
+                                    <td style="text-transform: capitalize;"><?php echo htmlspecialchars($row['role']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['email']); ?></td>
+                                    <td><?php echo date("Y-m-d", strtotime($row['created_at'])); ?></td>
+                                    <td class="<?php echo $statusClass; ?>"><?php echo $statusText; ?></td>
+                                    <td>
+                                        <a href="<?php echo $detailLink; ?>" class="btn-details">View Details</a>
+                                    </td>
+                                </tr>
+                        <?php
                             }
                         } else {
                             echo "<tr><td colspan='7' style='text-align:center; padding:20px;'>No users found in database.</td></tr>";
@@ -162,4 +169,5 @@ $result = $conn->query($sql);
     <script src="../assets/notification.js"></script>
 
 </body>
+
 </html>

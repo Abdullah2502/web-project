@@ -4,18 +4,18 @@ require_once '../config/db_connect.php';
 
 // --- 1. HANDLE FORM SUBMISSIONS (Approve/Reject) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    
+
     // A. Handle User (Producer) Decision
     if (isset($_POST['user_action'])) {
         // FIX 1: Ensure we get the ID from the form (matches hidden input name)
-        $profile_id = intval($_POST['producer_id']); 
+        $profile_id = intval($_POST['producer_id']);
         $status = ($_POST['user_action'] === 'Approve') ? 'verified' : 'rejected'; // ENUM is 'verified', not 'approved'
-        
+
         // FIX 2: Use 'profile_id' in WHERE clause
         $stmt = $conn->prepare("UPDATE producers SET verification_status = ? WHERE profile_id = ?");
         $stmt->bind_param("si", $status, $profile_id);
         $stmt->execute();
-        
+
         // If verified, update users table role to 'producer'
         if ($status === 'verified') {
             // FIX 3: Use 'profile_id' in subquery
@@ -23,25 +23,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt_role->bind_param("i", $profile_id);
             $stmt_role->execute();
         }
-        
+
         echo "<script>alert('Producer " . $status . " successfully!'); window.location.href='Approvals.php';</script>";
     }
 
     // B. Handle Content (Movie/Series) Decision
     if (isset($_POST['content_action'])) {
-        $content_type = $_POST['content_type']; 
+        $content_type = $_POST['content_type'];
         $content_id = intval($_POST['content_id']);
         $status = ($_POST['content_action'] === 'Approve') ? 'approved' : 'rejected';
-        
+
         if ($content_type === 'movie') {
             $stmt = $conn->prepare("UPDATE movies SET approval_status = ? WHERE movie_id = ?");
         } else {
             $stmt = $conn->prepare("UPDATE series SET approval_status = ? WHERE series_id = ?");
         }
-        
+
         $stmt->bind_param("si", $status, $content_id);
         $stmt->execute();
-        
+
         echo "<script>alert('Content " . $status . " successfully!'); window.location.href='Approvals.php';</script>";
     }
 }
@@ -72,6 +72,7 @@ $result_series = $conn->query($sql_series);
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -80,6 +81,7 @@ $result_series = $conn->query($sql_series);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="../assets/theme.js"></script>
 </head>
+
 <body>
 
     <div id="userReviewModal" class="modal-overlay" onclick="closeModalOnOverlay(event, 'userReviewModal')">
@@ -88,7 +90,7 @@ $result_series = $conn->query($sql_series);
                 <h3>Applicant Details</h3>
                 <button class="close-icon-btn" onclick="closeModal('userReviewModal')">&times;</button>
             </div>
-            
+
             <div style="display:flex; align-items:center; gap:15px; margin-bottom:25px;">
                 <div style="width:70px; height:70px; background:#1f2940; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:30px; color:var(--accent-color); border: 2px solid var(--border-color);">
                     <i class="fa-solid fa-user"></i>
@@ -107,7 +109,7 @@ $result_series = $conn->query($sql_series);
                     <span>Company:</span> <span id="uCompany" style="color:var(--text-main);">-</span>
                 </p>
                 <p style="font-size:13px; color:var(--text-muted); display:flex; justify-content:space-between; margin:0;">
-                    <span>Website:</span> 
+                    <span>Website:</span>
                     <a id="uWebsite" href="#" target="_blank" style="color:var(--accent-color); text-decoration:underline;">View Website</a>
                 </p>
             </div>
@@ -132,9 +134,18 @@ $result_series = $conn->query($sql_series);
                 </div>
             </div>
             <div class="modal-content-body">
-                <div class="detail-section"><h2 class="detail-heading">Description</h2><p id="mOverview" class="movie-description">Loading...</p></div>
-                <div class="detail-section"><h2 class="detail-heading">Genres</h2><div id="mGenres" class="genre-tags"></div></div>
-                <div class="detail-section"><h2 class="detail-heading">Cast</h2><div id="mCast" class="cast-scroller"></div></div>
+                <div class="detail-section">
+                    <h2 class="detail-heading">Description</h2>
+                    <p id="mOverview" class="movie-description">Loading...</p>
+                </div>
+                <div class="detail-section">
+                    <h2 class="detail-heading">Genres</h2>
+                    <div id="mGenres" class="genre-tags"></div>
+                </div>
+                <div class="detail-section">
+                    <h2 class="detail-heading">Cast</h2>
+                    <div id="mCast" class="cast-scroller"></div>
+                </div>
                 <div class="admin-action-section">
                     <h3 class="admin-action-title">Admin Decision</h3>
                     <form method="POST" class="admin-btn-container">
@@ -153,20 +164,23 @@ $result_series = $conn->query($sql_series);
             <a href="Dashboard.php" class="logo-btn hover-glow"><img src="../assets/logo.png" alt="Logo" class="logo-img"></a>
             <ul class="nav-links">
                 <li><a href="Dashboard.php">Dashboard</a></li>
-                <li><a href="Users.html">Users</a></li>
+                <li><a href="Users.php">Users</a></li>
                 <li><a href="Movies.php">Movies</a></li>
                 <li><a href="Series.php">Series</a></li>
-                <li><a href="Wallet.html">Wallet</a></li>
+                <li><a href="Wallet.php">Wallet</a></li>
             </ul>
             <div class="nav-icons">
-               <a href="AdminProfile.php" class="icon-btn hover-glow"><i class="fa-solid fa-user"></i></a>
-               <button class="icon-btn hover-glow"><i class="fa-solid fa-sun"></i></button>
+                <a href="AdminProfile.php" class="icon-btn hover-glow"><i class="fa-solid fa-user"></i></a>
+                <a href="../actions/logout.php" class="icon-btn hover-glow" title="Logout" style="color: #e50914;">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </a>
+                <button class="icon-btn hover-glow"><i class="fa-solid fa-sun"></i></button>
             </div>
         </div>
     </nav>
 
     <div class="main-content">
-        
+
         <section id="pending-users" class="section-container blue-border">
             <div class="section-tab">Pending Producers</div>
             <div class="table-wrapper">
@@ -181,25 +195,27 @@ $result_series = $conn->query($sql_series);
                     </thead>
                     <tbody>
                         <?php if ($result_producers->num_rows > 0): ?>
-                            <?php while($row = $result_producers->fetch_assoc()): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($row['username']); ?></td>
-                                <td><?php echo htmlspecialchars($row['email']); ?></td>
-                                <td><?php echo htmlspecialchars($row['company_name']); ?></td>
-                                <td>
-                                    <button class="btn-details" 
-                                        onclick="openUserModal(
+                            <?php while ($row = $result_producers->fetch_assoc()): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($row['username']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['email']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['company_name']); ?></td>
+                                    <td>
+                                        <button class="btn-details"
+                                            onclick="openUserModal(
                                             '<?php echo htmlspecialchars($row['username']); ?>', 
                                             '<?php echo htmlspecialchars($row['email']); ?>', 
                                             '<?php echo htmlspecialchars($row['company_name']); ?>', 
                                             '<?php echo htmlspecialchars($row['website']); ?>',
                                             '<?php echo $row['profile_id']; ?>'
                                         )">Review</button>
-                                </td>
-                            </tr>
+                                    </td>
+                                </tr>
                             <?php endwhile; ?>
                         <?php else: ?>
-                            <tr><td colspan="4" style="text-align:center; color:#666;">No pending producer requests.</td></tr>
+                            <tr>
+                                <td colspan="4" style="text-align:center; color:#666;">No pending producer requests.</td>
+                            </tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
@@ -211,21 +227,29 @@ $result_series = $conn->query($sql_series);
             <div class="table-wrapper">
                 <table class="activity-table">
                     <thead>
-                        <tr><th>Uploader</th><th>Movie Name</th><th>Genre</th><th>Duration</th><th>Review</th></tr>
+                        <tr>
+                            <th>Uploader</th>
+                            <th>Movie Name</th>
+                            <th>Genre</th>
+                            <th>Duration</th>
+                            <th>Review</th>
+                        </tr>
                     </thead>
                     <tbody>
                         <?php if ($result_movies->num_rows > 0): ?>
-                            <?php while($row = $result_movies->fetch_assoc()): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($row['uploader']); ?></td>
-                                <td><?php echo htmlspecialchars($row['title']); ?></td>
-                                <td><?php echo htmlspecialchars($row['genre']); ?></td>
-                                <td><?php echo $row['duration_minutes']; ?>m</td>
-                                <td><button class="btn-details" onclick="openApprovalModal('movie', '<?php echo $row['title']; ?>', <?php echo $row['movie_id']; ?>)">View Details</button></td>
-                            </tr>
+                            <?php while ($row = $result_movies->fetch_assoc()): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($row['uploader']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['title']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['genre']); ?></td>
+                                    <td><?php echo $row['duration_minutes']; ?>m</td>
+                                    <td><button class="btn-details" onclick="openApprovalModal('movie', '<?php echo $row['title']; ?>', <?php echo $row['movie_id']; ?>)">View Details</button></td>
+                                </tr>
                             <?php endwhile; ?>
                         <?php else: ?>
-                            <tr><td colspan="5" style="text-align:center; color:#666;">No pending movies.</td></tr>
+                            <tr>
+                                <td colspan="5" style="text-align:center; color:#666;">No pending movies.</td>
+                            </tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
@@ -237,21 +261,29 @@ $result_series = $conn->query($sql_series);
             <div class="table-wrapper">
                 <table class="activity-table">
                     <thead>
-                        <tr><th>Uploader</th><th>Series Name</th><th>Genre</th><th>Year</th><th>Review</th></tr>
+                        <tr>
+                            <th>Uploader</th>
+                            <th>Series Name</th>
+                            <th>Genre</th>
+                            <th>Year</th>
+                            <th>Review</th>
+                        </tr>
                     </thead>
                     <tbody>
                         <?php if ($result_series->num_rows > 0): ?>
-                            <?php while($row = $result_series->fetch_assoc()): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($row['uploader']); ?></td>
-                                <td><?php echo htmlspecialchars($row['title']); ?></td>
-                                <td><?php echo htmlspecialchars($row['genre']); ?></td>
-                                <td><?php echo $row['release_year']; ?></td>
-                                <td><button class="btn-details" onclick="openApprovalModal('series', '<?php echo $row['title']; ?>', <?php echo $row['series_id']; ?>)">View Details</button></td>
-                            </tr>
+                            <?php while ($row = $result_series->fetch_assoc()): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($row['uploader']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['title']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['genre']); ?></td>
+                                    <td><?php echo $row['release_year']; ?></td>
+                                    <td><button class="btn-details" onclick="openApprovalModal('series', '<?php echo $row['title']; ?>', <?php echo $row['series_id']; ?>)">View Details</button></td>
+                                </tr>
                             <?php endwhile; ?>
                         <?php else: ?>
-                            <tr><td colspan="5" style="text-align:center; color:#666;">No pending series.</td></tr>
+                            <tr>
+                                <td colspan="5" style="text-align:center; color:#666;">No pending series.</td>
+                            </tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
@@ -261,7 +293,7 @@ $result_series = $conn->query($sql_series);
     </div>
 
     <script>
-        const API_KEY = '96878691f0272aade53fca27ac2a739f'; 
+        const API_KEY = '96878691f0272aade53fca27ac2a739f';
         const IMG_BASE = 'https://image.tmdb.org/t/p/original';
         const IMG_POSTER = 'https://image.tmdb.org/t/p/w500';
 
@@ -275,8 +307,13 @@ $result_series = $conn->query($sql_series);
             document.getElementById('userReviewModal').style.display = 'flex';
         }
 
-        function closeModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
-        function closeModalOnOverlay(event, modalId) { if (event.target.id === modalId) closeModal(modalId); }
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function closeModalOnOverlay(event, modalId) {
+            if (event.target.id === modalId) closeModal(modalId);
+        }
 
         async function openApprovalModal(type, title, dbId) {
             document.getElementById('hiddenContentId').value = dbId;
@@ -324,7 +361,7 @@ $result_series = $conn->query($sql_series);
 
                 const cContainer = document.getElementById('mCast');
                 cContainer.innerHTML = '';
-                if(fullData.credits && fullData.credits.cast) {
+                if (fullData.credits && fullData.credits.cast) {
                     fullData.credits.cast.slice(0, 8).forEach(p => {
                         if (p.profile_path) {
                             const div = document.createElement('div');
@@ -346,4 +383,5 @@ $result_series = $conn->query($sql_series);
         }
     </script>
 </body>
+
 </html>

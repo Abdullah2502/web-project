@@ -23,7 +23,8 @@ if ($isLoggedIn) {
 
 // --- 2. FETCH MOVIES ---
 $movieList = [];
-$sql = "SELECT movie_id, title, poster_url, is_premium FROM movies WHERE approval_status = 'approved' ORDER BY created_at DESC LIMIT 50";
+// ADDED: release_year to query
+$sql = "SELECT movie_id, title, poster_url, is_premium, description, release_year FROM movies WHERE approval_status = 'approved' ORDER BY created_at DESC LIMIT 50";
 $result = $conn->query($sql);
 
 if ($result->num_rows > 0) {
@@ -32,14 +33,17 @@ if ($result->num_rows > 0) {
     }
 }
 
-// --- 3. HERO DATA (Newest Movie) ---
-$heroMovie = !empty($movieList) ? $movieList[0] : null;
-$heroAction = "";
-if ($heroMovie) {
-    // Links to the Movie Trailer page
-    $heroAction = "window.location.href='watchTrailer.php?id=" . $heroMovie['movie_id'] . "'";
-} else {
-    $heroAction = "window.location.href='movie.php'";
+// --- 3. PREPARE HERO SLIDES (Top 5 Newest) ---
+$heroMovies = array_slice($movieList, 0, 5);
+
+if (empty($heroMovies)) {
+    $heroMovies[] = [
+        'movie_id' => 0,
+        'title' => 'Welcome to Movies',
+        'description' => 'Discover the best movies on MSP.',
+        'release_year' => '',
+        'is_premium' => 0
+    ];
 }
 
 // Helper to render card
@@ -50,7 +54,6 @@ function renderMovieCard($movie)
         $imgSrc = '../' . $imgSrc;
     }
 
-    // Link to Movie Trailer Page
     $link = "window.location.href='watchTrailer.php?id=" . $movie['movie_id'] . "'";
     $premiumBadge = ($movie['is_premium'] == 1) ? '<span class="badge badge-paid">Premium</span>' : '<span class="badge badge-free">Free</span>';
     $filterClass = ($movie['is_premium'] == 1) ? 'paid' : 'free';
@@ -81,7 +84,6 @@ function renderMovieCard($movie)
     </script>
 
     <style>
-        /* Exact styles from series.php */
         :root {
             --bg-body: #020b1f;
             --bg-card: #1f2940;
@@ -241,8 +243,26 @@ function renderMovieCard($movie)
             overflow: hidden;
             display: flex;
             align-items: center;
-            padding-left: 50px;
             color: white;
+        }
+
+        .hero-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            z-index: 0;
+            display: flex;
+            align-items: center;
+            padding-left: 50px;
+        }
+
+        .hero-slide.active {
+            opacity: 1;
+            z-index: 1;
         }
 
         .hero-background {
@@ -253,7 +273,7 @@ function renderMovieCard($movie)
             height: 100%;
             background-size: cover;
             background-position: center;
-            z-index: 0;
+            z-index: -1;
         }
 
         .hero-overlay {
@@ -262,20 +282,28 @@ function renderMovieCard($movie)
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(to right, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.2));
-            z-index: 1;
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.5) 50%, rgba(0, 0, 0, 0.1) 100%);
+            z-index: 0;
         }
 
         .hero-content {
             position: relative;
             z-index: 2;
             max-width: 600px;
+            padding-top: 50px;
+            transform: translateY(20px);
+            transition: transform 1s ease-out;
+        }
+
+        .hero-slide.active .hero-content {
+            transform: translateY(0);
         }
 
         .hero-title {
             font-size: 3.5rem;
             margin-bottom: 10px;
             font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
         }
 
         .hero-desc {
@@ -285,6 +313,34 @@ function renderMovieCard($movie)
             line-height: 1.5;
             max-height: 100px;
             overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        .hero-indicators {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .indicator.active {
+            background-color: #e50914;
+            transform: scale(1.2);
         }
 
         .btn-watch {
@@ -295,8 +351,16 @@ function renderMovieCard($movie)
             border: none;
             cursor: pointer;
             border-radius: 4px;
+            box-shadow: 0 4px 15px rgba(229, 9, 20, 0.4);
+            transition: 0.3s;
         }
 
+        .btn-watch:hover {
+            transform: scale(1.05);
+            background-color: #f40612;
+        }
+
+        /* GRID */
         .container {
             padding: 40px 5%;
         }
@@ -461,18 +525,34 @@ function renderMovieCard($movie)
         </div>
     </nav>
 
-    <header class="hero">
-        <div class="hero-background" id="heroBackdrop"></div>
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-            <h1 class="hero-title" id="heroTitle"><?php echo $heroMovie ? htmlspecialchars($heroMovie['title']) : 'Welcome to Movies'; ?></h1>
-            <p class="hero-desc" id="heroDesc"><?php echo $heroMovie ? 'Loading movie details...' : 'Discover the best movies on MSP.'; ?></p>
+    <header class="hero" id="heroSlider">
+        <?php foreach ($heroMovies as $index => $item): ?>
+            <div class="hero-slide <?php echo $index === 0 ? 'active' : ''; ?>"
+                data-title="<?php echo htmlspecialchars($item['title']); ?>"
+                data-year="<?php echo htmlspecialchars($item['release_year']); ?>">
+                <div class="hero-background" id="bg-<?php echo $index; ?>"></div>
+                <div class="hero-overlay"></div>
+                <div class="hero-content">
+                    <div style="color: #e50914; font-weight:bold; margin-bottom:5px; text-transform:uppercase; letter-spacing:1px; font-size: 0.9rem;">
+                        New Release
+                    </div>
+                    <h1 class="hero-title"><?php echo htmlspecialchars($item['title']); ?></h1>
 
-            <?php if ($heroMovie): ?>
-                <button class="btn-watch" onclick="<?php echo $heroAction; ?>">
-                    <i class="fa-solid fa-play"></i> Watch Trailer
-                </button>
-            <?php endif; ?>
+                    <p class="hero-desc" id="desc-<?php echo $index; ?>">
+                        Loading details...
+                    </p>
+
+                    <button class="btn-watch" onclick="window.location.href='watchTrailer.php?id=<?php echo $item['movie_id']; ?>'">
+                        <i class="fa-solid fa-play"></i> Watch Trailer
+                    </button>
+                </div>
+            </div>
+        <?php endforeach; ?>
+
+        <div class="hero-indicators">
+            <?php foreach ($heroMovies as $index => $item): ?>
+                <div class="indicator <?php echo $index === 0 ? 'active' : ''; ?>" onclick="goToSlide(<?php echo $index; ?>)"></div>
+            <?php endforeach; ?>
         </div>
     </header>
 
@@ -506,31 +586,75 @@ function renderMovieCard($movie)
     </footer>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // HERO API FETCH (Movies)
-            const heroTitle = "<?php echo $heroMovie ? htmlspecialchars($heroMovie['title']) : ''; ?>";
-            const apiKey = '96878691f0272aade53fca27ac2a739f';
+        const apiKey = '96878691f0272aade53fca27ac2a739f';
 
-            if (heroTitle) {
-                // Changed endpoint to /search/movie
-                fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(heroTitle)}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.results && data.results.length > 0) {
-                            const movie = data.results[0];
-                            if (movie.backdrop_path) {
-                                document.getElementById('heroBackdrop').style.backgroundImage = `url('https://image.tmdb.org/t/p/original${movie.backdrop_path}')`;
-                            } else {
-                                document.getElementById('heroBackdrop').style.background = 'linear-gradient(to bottom, #1f2940, #020b1f)';
-                            }
-                            if (movie.overview) {
-                                document.getElementById('heroDesc').innerText = movie.overview;
-                            }
-                        }
-                    });
-            } else {
-                document.getElementById('heroBackdrop').style.backgroundImage = "url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=2525')";
+        // --- HERO SLIDESHOW LOGIC ---
+        const slides = document.querySelectorAll('.hero-slide');
+        const indicators = document.querySelectorAll('.indicator');
+        let currentSlide = 0;
+        let slideInterval;
+
+        function showSlide(index) {
+            slides.forEach((slide, i) => {
+                slide.classList.remove('active');
+                indicators[i].classList.remove('active');
+            });
+            slides[index].classList.add('active');
+            indicators[index].classList.add('active');
+            currentSlide = index;
+        }
+
+        function nextSlide() {
+            let next = (currentSlide + 1) % slides.length;
+            showSlide(next);
+        }
+
+        window.goToSlide = function(index) {
+            showSlide(index);
+            resetTimer();
+        }
+
+        function resetTimer() {
+            clearInterval(slideInterval);
+            slideInterval = setInterval(nextSlide, 6000);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (slides.length > 1) {
+                resetTimer();
             }
+
+            // --- API FETCH FOR HERO BACKGROUND & DESCRIPTION ---
+            slides.forEach((slide, index) => {
+                const title = slide.dataset.title;
+                const year = slide.dataset.year; // Get Year for precision
+
+                if (title) {
+                    // Fetch with Year
+                    const url = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(title)}&primary_release_year=${year}`;
+
+                    fetch(url)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.results && data.results.length > 0) {
+                                const movie = data.results[0];
+
+                                // Update Background
+                                if (movie.backdrop_path) {
+                                    document.getElementById(`bg-${index}`).style.backgroundImage = `url('https://image.tmdb.org/t/p/original${movie.backdrop_path}')`;
+                                } else {
+                                    document.getElementById(`bg-${index}`).style.background = 'linear-gradient(to bottom, #1f2940, #020b1f)';
+                                }
+
+                                // Update Description (Overwrite DB content)
+                                if (movie.overview) {
+                                    document.getElementById(`desc-${index}`).innerText = movie.overview;
+                                }
+                            }
+                        })
+                        .catch(err => console.log('Hero Fetch Error:', err));
+                }
+            });
 
             // UI LOGIC
             const themeToggle = document.getElementById('theme-toggle');

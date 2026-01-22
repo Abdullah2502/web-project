@@ -38,9 +38,18 @@ if (!$series) {
 
 $seriesTitle = $series['title'];
 $seriesYear = $series['release_year'];
-$seriesPrice = $series['price']; // Added Price
+$seriesPrice = $series['price'];
 $isPremiumContent = ($series['is_premium'] == 1);
 $type = $isPremiumContent ? 'Premium' : 'Free';
+
+// Check Purchased
+$hasPurchased = false;
+if ($isLoggedIn && $isPremiumContent) {
+    $pStmt = $conn->prepare("SELECT purchase_id FROM purchases WHERE user_id = ? AND content_type = 'series' AND content_id = ?");
+    $pStmt->bind_param("ii", $user_id, $series_id);
+    $pStmt->execute();
+    if ($pStmt->get_result()->num_rows > 0) $hasPurchased = true;
+}
 
 // --- 4. HANDLE REVIEWS ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review'])) {
@@ -78,7 +87,6 @@ $avgRating = (count($reviews) > 0) ? round($totalStars / count($reviews), 1) : "
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        /* Reusing styles for consistency */
         :root {
             --bg-body: #020b1f;
             --bg-nav: rgba(2, 11, 31, 0.95);
@@ -313,35 +321,37 @@ $avgRating = (count($reviews) > 0) ? round($totalStars / count($reviews), 1) : "
         const seriesId = <?php echo $series_id; ?>;
         const seriesPrice = <?php echo json_encode($seriesPrice); ?>;
         const isPremium = <?php echo json_encode($isPremiumContent); ?>;
+        const hasPurchased = <?php echo json_encode($hasPurchased); ?>;
         const userPlan = <?php echo json_encode($membership); ?>;
         const isLoggedIn = <?php echo json_encode($isLoggedIn); ?>;
 
-        // --- AUTH & PAYMENT LOGIC ---
         function handleWatch() {
-            // 1. GUEST
             if (!isLoggedIn) {
                 window.location.href = '../auth/auth.php';
                 return;
             }
 
-            // 2. MONETIZED (Premium Content)
+            if (hasPurchased) {
+                window.location.href = `watchSeries.php?id=${seriesId}`;
+                return;
+            }
+
             if (isPremium) {
                 Swal.fire({
                     icon: 'info',
                     title: 'Premium Series',
-                    text: `This series is monetized. You need to pay $${seriesPrice} to watch it.`,
+                    text: `This series is monetized. You need to pay ${seriesPrice} BDT to watch it.`,
                     showCancelButton: true,
                     confirmButtonText: 'Pay Now',
                     confirmButtonColor: '#e50914'
                 }).then((r) => {
                     if (r.isConfirmed) {
-                        window.location.href = `dummyTransactions.php?id=${seriesId}&type=series&price=${seriesPrice}`;
+                        window.location.href = `purchase.php?id=${seriesId}&type=series`;
                     }
                 });
                 return;
             }
 
-            // 3. STANDARD CONTENT
             if (userPlan === 'free') {
                 Swal.fire({
                     icon: 'warning',
@@ -354,7 +364,6 @@ $avgRating = (count($reviews) > 0) ? round($totalStars / count($reviews), 1) : "
                     if (r.isConfirmed) window.location.href = 'subscription.php';
                 });
             } else {
-                // 4. APPROVED
                 window.location.href = `watchSeries.php?id=${seriesId}`;
             }
         }
@@ -371,12 +380,12 @@ $avgRating = (count($reviews) > 0) ? round($totalStars / count($reviews), 1) : "
             .then(res => res ? res.json() : null)
             .then(data => {
                 if (data) {
-                    // Trailer
                     const trailer = data.videos.results.find(v => v.type === 'Trailer' && v.site === 'YouTube');
                     if (trailer) {
                         document.getElementById('trailerContainer').innerHTML = `<iframe src="https://www.youtube.com/embed/${trailer.key}?autoplay=1&mute=1" allowfullscreen></iframe>`;
+                    } else {
+                        document.getElementById('trailerContainer').innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100%;color:#666;">No Trailer Available</div>';
                     }
-                    // Cast
                     const castDiv = document.getElementById('seriesCast');
                     castDiv.innerHTML = '';
                     if (data.credits && data.credits.cast) {
@@ -385,7 +394,6 @@ $avgRating = (count($reviews) > 0) ? round($totalStars / count($reviews), 1) : "
                             castDiv.innerHTML += `<div class="person-item"><img src="${img}"><b>${p.name}</b></div>`;
                         });
                     }
-                    // Creator
                     if (data.created_by.length > 0) {
                         const c = data.created_by[0];
                         const img = c.profile_path ? `https://image.tmdb.org/t/p/w200${c.profile_path}` : '../assets/user.png';

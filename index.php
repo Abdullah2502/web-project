@@ -26,9 +26,9 @@ if ($is_logged_in) {
     }
 }
 
-// --- 3. FETCH MOVIES ---
+// --- 3. FETCH MOVIES (Added release_year) ---
 $movies = [];
-$sql_movies = "SELECT movie_id, title, poster_url, is_premium, created_at FROM movies WHERE approval_status = 'approved' ORDER BY created_at DESC LIMIT 8";
+$sql_movies = "SELECT movie_id, title, poster_url, is_premium, created_at, release_year FROM movies WHERE approval_status = 'approved' ORDER BY created_at DESC LIMIT 8";
 $result_movies = $conn->query($sql_movies);
 if ($result_movies && $result_movies->num_rows > 0) {
     while ($row = $result_movies->fetch_assoc()) {
@@ -37,9 +37,9 @@ if ($result_movies && $result_movies->num_rows > 0) {
     }
 }
 
-// --- 4. FETCH SERIES ---
+// --- 4. FETCH SERIES (Added release_year) ---
 $series = [];
-$sql_series = "SELECT series_id, title, poster_url, is_premium, created_at FROM series WHERE approval_status = 'approved' ORDER BY created_at DESC LIMIT 8";
+$sql_series = "SELECT series_id, title, poster_url, is_premium, created_at, release_year FROM series WHERE approval_status = 'approved' ORDER BY created_at DESC LIMIT 8";
 $result_series = $conn->query($sql_series);
 if ($result_series && $result_series->num_rows > 0) {
     while ($row = $result_series->fetch_assoc()) {
@@ -111,7 +111,8 @@ if (empty($heroItems)) {
         'id' => 0,
         'title' => 'Welcome to MSP',
         'content_type' => 'movie',
-        'overview' => 'Discover the best movies and series on our platform.'
+        'overview' => 'Discover the best movies and series on our platform.',
+        'release_year' => ''
     ];
 }
 
@@ -846,7 +847,8 @@ function renderContinueCard($item)
         ?>
             <div class="hero-slide <?php echo $index === 0 ? 'active' : ''; ?>"
                 data-title="<?php echo htmlspecialchars($item['title']); ?>"
-                data-type="<?php echo $item['content_type']; ?>">
+                data-type="<?php echo $item['content_type']; ?>"
+                data-year="<?php echo htmlspecialchars($item['release_year']); ?>">
 
                 <div class="hero-background" id="bg-<?php echo $index; ?>"></div>
                 <div class="hero-overlay"></div>
@@ -1018,10 +1020,21 @@ function renderContinueCard($item)
             slides.forEach((slide, index) => {
                 const title = slide.dataset.title;
                 const type = slide.dataset.type;
+                // Capture the year
+                const year = slide.dataset.year;
+
                 const endpoint = (type === 'series') ? 'tv' : 'movie';
 
+                // Construct URL with Year logic
+                let yearParam = '';
+                if (year) {
+                    if (type === 'movie') yearParam = `&primary_release_year=${year}`;
+                    if (type === 'series' || type === 'tv') yearParam = `&first_air_date_year=${year}`;
+                }
+
                 if (title) {
-                    const url = `https://api.themoviedb.org/3/search/${endpoint}?api_key=${apiKey}&query=${encodeURIComponent(title)}`;
+                    const url = `https://api.themoviedb.org/3/search/${endpoint}?api_key=${apiKey}&query=${encodeURIComponent(title)}${yearParam}`;
+
                     fetch(url)
                         .then(res => res.json())
                         .then(data => {
