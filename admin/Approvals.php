@@ -7,18 +7,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // A. Handle User (Producer) Decision
     if (isset($_POST['user_action'])) {
-        // FIX 1: Ensure we get the ID from the form (matches hidden input name)
         $profile_id = intval($_POST['producer_id']);
-        $status = ($_POST['user_action'] === 'Approve') ? 'verified' : 'rejected'; // ENUM is 'verified', not 'approved'
+        $status = ($_POST['user_action'] === 'Approve') ? 'verified' : 'rejected';
 
-        // FIX 2: Use 'profile_id' in WHERE clause
+        // Update Producer Status
         $stmt = $conn->prepare("UPDATE producers SET verification_status = ? WHERE profile_id = ?");
         $stmt->bind_param("si", $status, $profile_id);
         $stmt->execute();
 
         // If verified, update users table role to 'producer'
         if ($status === 'verified') {
-            // FIX 3: Use 'profile_id' in subquery
             $stmt_role = $conn->prepare("UPDATE users SET role = 'producer' WHERE user_id = (SELECT user_id FROM producers WHERE profile_id = ?)");
             $stmt_role->bind_param("i", $profile_id);
             $stmt_role->execute();
@@ -48,8 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // --- 2. FETCH PENDING DATA ---
 
-// FIX 4: Use 'p.profile_id' in SELECT
-$sql_producers = "SELECT p.profile_id, u.username, u.email, p.website, p.company_name, u.created_at 
+// UPDATED: Added license_number and document_path to query
+$sql_producers = "SELECT p.profile_id, u.username, u.email, p.website, p.company_name, p.license_number, p.document_path, u.created_at 
                   FROM producers p 
                   JOIN users u ON p.user_id = u.user_id 
                   WHERE p.verification_status = 'pending'";
@@ -107,6 +105,13 @@ $result_series = $conn->query($sql_series);
                 </p>
                 <p style="margin-bottom:10px; font-size:13px; color:var(--text-muted); display:flex; justify-content:space-between;">
                     <span>Company:</span> <span id="uCompany" style="color:var(--text-main);">-</span>
+                </p>
+                <p style="margin-bottom:10px; font-size:13px; color:var(--text-muted); display:flex; justify-content:space-between;">
+                    <span>License No:</span> <span id="uLicense" style="color:#e50914; font-weight:bold;">-</span>
+                </p>
+                <p style="margin-bottom:10px; font-size:13px; color:var(--text-muted); display:flex; justify-content:space-between;">
+                    <span>Document:</span>
+                    <a id="uDoc" href="#" target="_blank" style="color:var(--accent-color); text-decoration:underline;">View Submitted File</a>
                 </p>
                 <p style="font-size:13px; color:var(--text-muted); display:flex; justify-content:space-between; margin:0;">
                     <span>Website:</span>
@@ -207,6 +212,8 @@ $result_series = $conn->query($sql_series);
                                             '<?php echo htmlspecialchars($row['email']); ?>', 
                                             '<?php echo htmlspecialchars($row['company_name']); ?>', 
                                             '<?php echo htmlspecialchars($row['website']); ?>',
+                                            '<?php echo htmlspecialchars($row['license_number']); ?>',
+                                            '<?php echo htmlspecialchars($row['document_path']); ?>',
                                             '<?php echo $row['profile_id']; ?>'
                                         )">Review</button>
                                     </td>
@@ -297,12 +304,33 @@ $result_series = $conn->query($sql_series);
         const IMG_BASE = 'https://image.tmdb.org/t/p/original';
         const IMG_POSTER = 'https://image.tmdb.org/t/p/w500';
 
-        // JS FIX: Corrected variable mapping for Company/Website
-        function openUserModal(name, email, company, website, id) {
+        // UPDATED: Now accepts license and docPath
+        function openUserModal(name, email, company, website, license, docPath, id) {
             document.getElementById('uName').innerText = name;
             document.getElementById('uEmail').innerText = email;
             document.getElementById('uCompany').innerText = company;
-            document.getElementById('uWebsite').href = website;
+            document.getElementById('uLicense').innerText = license; // New
+
+            // Handle Website Link
+            const webLink = document.getElementById('uWebsite');
+            if (website) {
+                webLink.href = website;
+                webLink.style.display = 'inline';
+                webLink.innerText = "View Website";
+            } else {
+                webLink.style.display = 'none';
+            }
+
+            // Handle Document Link
+            // Since admin/ is one folder deep, we go up one level to root, then to doc path
+            const docLink = document.getElementById('uDoc');
+            if (docPath) {
+                docLink.href = '../' + docPath;
+                docLink.style.display = 'inline';
+            } else {
+                docLink.style.display = 'none';
+            }
+
             document.getElementById('hiddenProducerId').value = id;
             document.getElementById('userReviewModal').style.display = 'flex';
         }

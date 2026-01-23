@@ -38,8 +38,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete_movie'])) {
 $msg = "";
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_monetization'])) {
     $is_premium = isset($_POST['is_premium']) ? 1 : 0;
-
-    // If premium, use the posted price. If free, force price to 0.00
     $price = $is_premium ? floatval($_POST['price']) : 0.00;
 
     $sql = "UPDATE movies SET price = ?, is_premium = ? WHERE movie_id = ?";
@@ -72,8 +70,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_details'])) {
     }
 }
 
-// 5. FETCH MOVIE DATA
-$sql = "SELECT * FROM movies WHERE movie_id = ?";
+// 5. FETCH MOVIE DATA (Updated to get Uploader Name)
+$sql = "SELECT m.*, u.username as uploader 
+        FROM movies m 
+        LEFT JOIN users u ON m.uploaded_by = u.user_id 
+        WHERE m.movie_id = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $movie_id);
 $stmt->execute();
@@ -238,7 +239,6 @@ $video_file = !empty($movie['video_url']) ? "../" . $movie['video_url'] : '';
             background: #bb2d3b;
         }
 
-        /* Fix for hidden button issue */
         .price-input-container {
             display: none;
             margin-top: 15px;
@@ -267,9 +267,7 @@ $video_file = !empty($movie['video_url']) ? "../" . $movie['video_url'] : '';
 
     <nav class="navbar">
         <div class="nav-container">
-            <a href="Dashboard.php" class="logo-btn hover-glow">
-                <img src="../assets/logo.png" alt="Logo" class="logo-img">
-            </a>
+            <a href="Dashboard.php" class="logo-btn hover-glow"><img src="../assets/logo.png" alt="Logo" class="logo-img"></a>
             <ul class="nav-links">
                 <li><a href="Dashboard.php" class="hover-glow">Dashboard</a></li>
                 <li><a href="Users.php" class="hover-glow">Users</a></li>
@@ -277,9 +275,7 @@ $video_file = !empty($movie['video_url']) ? "../" . $movie['video_url'] : '';
                 <li><a href="Series.php" class="hover-glow">Series</a></li>
                 <li><a href="Wallet.html" class="hover-glow">Wallet</a></li>
             </ul>
-            <div class="nav-icons">
-                <a href="AdminProfile.html" class="icon-btn hover-glow"><i class="fa-solid fa-user"></i></a>
-            </div>
+            <div class="nav-icons"><a href="AdminProfile.html" class="icon-btn hover-glow"><i class="fa-solid fa-user"></i></a></div>
         </div>
     </nav>
 
@@ -291,10 +287,8 @@ $video_file = !empty($movie['video_url']) ? "../" . $movie['video_url'] : '';
 
             <div style="display:flex; align-items:center;">
                 <h1 id="mTitle" style="font-size: 48px; margin-bottom: 10px;"><?php echo htmlspecialchars($movie['title']); ?></h1>
-
                 <button class="btn-edit" onclick="openEditModal()"><i class="fa-solid fa-pen"></i> Edit</button>
-
-                <form method="POST" onsubmit="return confirm('⚠️ WARNING: Are you sure you want to delete this movie?\nThis action cannot be undone and will delete the video file from the server.');" style="display:inline;">
+                <form method="POST" onsubmit="return confirm('⚠️ WARNING: Delete this movie?');" style="display:inline;">
                     <input type="hidden" name="delete_movie" value="1">
                     <button type="submit" class="btn-delete"><i class="fa-solid fa-trash"></i> Delete</button>
                 </form>
@@ -304,6 +298,7 @@ $video_file = !empty($movie['video_url']) ? "../" . $movie['video_url'] : '';
                 <span id="mYear"><?php echo $movie['release_year']; ?></span> |
                 <span id="mDuration"><?php echo $movie['duration_minutes']; ?> min</span> |
                 <span id="mGenre"><?php echo htmlspecialchars($movie['genre']); ?></span> |
+                <span><i class="fa-solid fa-user"></i> Uploaded by: <b style="color:white;"><?php echo htmlspecialchars($movie['uploader'] ?? 'Unknown'); ?></b></span> |
                 <span id="mRating" style="color:<?php echo $movie['is_premium'] ? '#ffd700' : '#2ecc71'; ?>">
                     <i class="fa-solid fa-star"></i> <?php echo $movie['is_premium'] ? 'Premium' : 'Free'; ?>
                 </span>
@@ -311,16 +306,11 @@ $video_file = !empty($movie['video_url']) ? "../" . $movie['video_url'] : '';
 
             <div style="display: flex; gap: 15px;">
                 <?php if (!empty($movie['video_url'])): ?>
-                    <button class="btn-watch" onclick="openLocalPlayer()">
-                        <i class="fa-solid fa-play"></i> Watch Movie
-                    </button>
+                    <button class="btn-watch" onclick="openLocalPlayer()"><i class="fa-solid fa-play"></i> Watch Movie</button>
                 <?php else: ?>
                     <button class="btn-watch" style="opacity:0.5; cursor:not-allowed;">No Video File</button>
                 <?php endif; ?>
-
-                <button class="btn-save" style="background: rgba(255,255,255,0.2);" onclick="fetchTrailer()">
-                    <i class="fa-brands fa-youtube" style="margin-right:8px;"></i> Watch Trailer
-                </button>
+                <button class="btn-save" style="background: rgba(255,255,255,0.2);" onclick="fetchTrailer()"><i class="fa-brands fa-youtube" style="margin-right:8px;"></i> Watch Trailer</button>
             </div>
         </div>
     </div>

@@ -12,12 +12,10 @@ $msg = "";
 
 // --- 2. HANDLE ACTIONS ---
 
-// A. UPDATE MONETIZATION (Added Price Logic)
+// A. UPDATE MONETIZATION
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_monetization'])) {
     $price = $_POST['price'];
     $is_premium = isset($_POST['is_premium']) ? 1 : 0;
-
-    // Force price to 0 if not premium
     if (!$is_premium) $price = 0.00;
 
     $sql = "UPDATE series SET price = ?, is_premium = ? WHERE series_id = ?";
@@ -33,7 +31,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_monetization'])
 
 // B. DELETE SERIES
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete_series'])) {
-    // Delete Episodes Files
     $sql_eps = "SELECT video_url FROM episodes WHERE series_id = ?";
     $stmt_eps = $conn->prepare($sql_eps);
     $stmt_eps->bind_param("i", $series_id);
@@ -42,7 +39,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete_series'])) {
     while ($row = $res_eps->fetch_assoc()) {
         if (!empty($row['video_url']) && file_exists("../" . $row['video_url'])) unlink("../" . $row['video_url']);
     }
-    // Delete Poster
     $sql_poster = "SELECT poster_url FROM series WHERE series_id = ?";
     $stmt = $conn->prepare($sql_poster);
     $stmt->bind_param("i", $series_id);
@@ -50,7 +46,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete_series'])) {
     $poster = $stmt->get_result()->fetch_assoc();
     if ($poster && !empty($poster['poster_url']) && file_exists("../" . $poster['poster_url'])) unlink("../" . $poster['poster_url']);
 
-    // Delete DB Record
     $sql_del = "DELETE FROM series WHERE series_id = ?";
     $stmt = $conn->prepare($sql_del);
     $stmt->bind_param("i", $series_id);
@@ -109,15 +104,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['upload_episode'])) {
     }
 }
 
-// --- 3. FETCH DATA ---
-$sql = "SELECT * FROM series WHERE series_id = ?";
+// --- 3. FETCH DATA (Updated to get Uploader Name) ---
+$sql = "SELECT s.*, u.username as uploader 
+        FROM series s 
+        LEFT JOIN users u ON s.uploaded_by = u.user_id 
+        WHERE s.series_id = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $series_id);
 $stmt->execute();
 $series = $stmt->get_result()->fetch_assoc();
 if (!$series) die("Series not found.");
 
-// Default price if column is empty (prevent errors before SQL update)
 if (!isset($series['price'])) $series['price'] = 0.00;
 
 $sql_eps = "SELECT * FROM episodes WHERE series_id = ? ORDER BY season_number ASC, episode_number ASC";
@@ -139,7 +136,6 @@ $poster_url = !empty($series['poster_url']) ? "../" . $series['poster_url'] : '.
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="../assets/theme.js"></script>
     <style>
-        /* Shared Styles */
         .modal {
             display: none;
             position: fixed;
@@ -317,7 +313,6 @@ $poster_url = !empty($series['poster_url']) ? "../" . $series['poster_url'] : '.
             border-radius: 4px;
         }
 
-        /* Fix for hidden button issue */
         .price-input-container {
             display: none;
             margin-top: 15px;
@@ -359,9 +354,7 @@ $poster_url = !empty($series['poster_url']) ? "../" . $series['poster_url'] : '.
 
             <div style="display:flex; align-items:center;">
                 <h1 id="sTitle" style="font-size: 48px; margin-bottom: 10px;"><?php echo htmlspecialchars($series['title']); ?></h1>
-
                 <button class="btn-edit" onclick="openEditModal()"><i class="fa-solid fa-pen"></i> Edit</button>
-
                 <form method="POST" onsubmit="return confirm('Delete entire series?');" style="display:inline;">
                     <input type="hidden" name="delete_series" value="1">
                     <button type="submit" class="btn-delete"><i class="fa-solid fa-trash"></i> Delete Series</button>
@@ -371,6 +364,7 @@ $poster_url = !empty($series['poster_url']) ? "../" . $series['poster_url'] : '.
             <div style="display: flex; gap: 15px; font-size: 14px; color: #ccc; margin-bottom: 20px;">
                 <span><?php echo $series['release_year']; ?></span> |
                 <span><?php echo htmlspecialchars($series['genre']); ?></span> |
+                <span><i class="fa-solid fa-user"></i> Uploaded by: <b style="color:white;"><?php echo htmlspecialchars($series['uploader'] ?? 'Unknown'); ?></b></span> |
                 <span style="color:<?php echo $series['is_premium'] ? '#ffd700' : '#2ecc71'; ?>">
                     <i class="fa-solid fa-star"></i> <?php echo $series['is_premium'] ? 'Premium' : 'Free'; ?>
                 </span>
@@ -540,7 +534,6 @@ $poster_url = !empty($series['poster_url']) ? "../" . $series['poster_url'] : '.
             video.currentTime = 0;
             video.src = "";
         }
-
         const API_KEY = '96878691f0272aade53fca27ac2a739f';
         const IMG_POSTER = 'https://image.tmdb.org/t/p/w200';
         async function fetchCast(isManual = false) {

@@ -12,12 +12,12 @@ $user_id = $_SESSION['user_id'];
 // Handle AJAX requests separately
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
-    
+
     if (isset($_POST['send_message'])) {
         $message = mysqli_real_escape_string($conn, $_POST['message'] ?? '');
         $receiver_id = intval($_POST['receiver_id'] ?? 0);
         $reply_to_id = intval($_POST['reply_to_id'] ?? 0);
-        
+
         if ($message && $receiver_id > 0) {
             // If replying to a message, prefix with reply marker
             $final_message = $message;
@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'content' => $message
                 ]);
             }
-            
+
             $insert_query = "INSERT INTO chat_messages (sender_id, receiver_id, message, sent_at, is_read)
                              VALUES ($user_id, $receiver_id, '$final_message', NOW(), 0)";
             if (mysqli_query($conn, $insert_query)) {
@@ -42,10 +42,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         exit;
     }
-    
+
     if (isset($_POST['get_messages'])) {
         $contact_id = intval($_POST['contact_id'] ?? 0);
-        
+
         if ($contact_id > 0) {
             $messages_query = "SELECT message_id, sender_id, message, sent_at FROM chat_messages WHERE (sender_id = $user_id AND receiver_id = $contact_id) OR (sender_id = $contact_id AND receiver_id = $user_id) ORDER BY sent_at ASC LIMIT 100";
             $messages_result = mysqli_query($conn, $messages_query);
@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $msg_content = $row['message'];
                     $reply_to = null;
                     $is_reply = false;
-                    
+
                     // Check if this is a reply message
                     $decoded = json_decode($msg_content, true);
                     if ($decoded && isset($decoded['type']) && $decoded['type'] === 'reply') {
@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $reply_to = $decoded['reply_to'];
                         $msg_content = $decoded['content'];
                     }
-                    
+
                     $messages[] = [
                         'message_id' => intval($row['message_id']),
                         'sender_id' => intval($row['sender_id']),
@@ -74,11 +74,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ];
                 }
             }
-            
+
             // Mark messages as read
             $update_read = "UPDATE chat_messages SET is_read = 1 WHERE receiver_id = $user_id AND sender_id = $contact_id AND is_read = 0";
             mysqli_query($conn, $update_read);
-            
+
             echo json_encode(['success' => true, 'messages' => $messages]);
         } else {
             echo json_encode(['success' => false, 'messages' => []]);
@@ -87,9 +87,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Get list of contacts (other producers)
+// --- UPDATE 1: Modified Query to fetch BOTH 'producer' AND 'admin' ---
+// We also fetch 'role' so we can show a badge in the UI
 $contacts = [];
-$contacts_query = "SELECT u.user_id as id, u.username FROM users u WHERE u.role = 'producer' AND u.user_id != $user_id ORDER BY u.username ASC LIMIT 20";
+$contacts_query = "SELECT u.user_id as id, u.username, u.role 
+                   FROM users u 
+                   WHERE (u.role = 'producer' OR u.role = 'admin') 
+                   AND u.user_id != $user_id 
+                   ORDER BY u.role ASC, u.username ASC LIMIT 20";
+
 $contacts_result = mysqli_query($conn, $contacts_query);
 if ($contacts_result) {
     while ($row = mysqli_fetch_assoc($contacts_result)) {
@@ -110,7 +116,7 @@ if ($selected_contact_id > 0) {
     if ($contact_name_result && $row = mysqli_fetch_assoc($contact_name_result)) {
         $contact_name = htmlspecialchars($row['username']);
     }
-    
+
     // Get chat messages with selected contact
     $messages_query = "SELECT message_id, sender_id, message, sent_at FROM chat_messages WHERE (sender_id = $user_id AND receiver_id = $selected_contact_id) OR (sender_id = $selected_contact_id AND receiver_id = $user_id) ORDER BY sent_at ASC LIMIT 100";
     $messages_result = mysqli_query($conn, $messages_query);
@@ -119,7 +125,7 @@ if ($selected_contact_id > 0) {
             $msg_content = $row['message'];
             $reply_to = null;
             $is_reply = false;
-            
+
             // Check if this is a reply message
             $decoded = json_decode($msg_content, true);
             if ($decoded && isset($decoded['type']) && $decoded['type'] === 'reply') {
@@ -127,7 +133,7 @@ if ($selected_contact_id > 0) {
                 $reply_to = $decoded['reply_to'];
                 $msg_content = $decoded['content'];
             }
-            
+
             $messages[] = [
                 'message_id' => intval($row['message_id']),
                 'sender_id' => intval($row['sender_id']),
@@ -138,7 +144,7 @@ if ($selected_contact_id > 0) {
             ];
         }
     }
-    
+
     // Mark messages as read
     $update_read = "UPDATE chat_messages SET is_read = 1 WHERE receiver_id = $user_id AND sender_id = $selected_contact_id AND is_read = 0";
     mysqli_query($conn, $update_read);
@@ -164,15 +170,15 @@ if ($selected_contact_id > 0) {
             margin-bottom: 10px;
             animation: fadeIn 0.2s ease-out;
         }
-        
+
         .message.received {
             justify-content: flex-start;
         }
-        
+
         .message.sent {
             justify-content: flex-end;
         }
-        
+
         .message-bubble {
             max-width: 70%;
             min-width: 120px;
@@ -188,20 +194,20 @@ if ($selected_contact_id > 0) {
             flex-direction: column;
             justify-content: center;
         }
-        
+
         .message.received .message-bubble {
             background-color: var(--bg-element);
             color: var(--text-main);
             border-bottom-left-radius: 4px;
             border: 1px solid var(--border-color);
         }
-        
+
         .message.sent .message-bubble {
             background-color: var(--accent-color);
             color: white;
             border-bottom-right-radius: 4px;
         }
-        
+
         .msg-time {
             font-size: 11px;
             opacity: 0.7;
@@ -209,7 +215,7 @@ if ($selected_contact_id > 0) {
             display: block;
             text-align: right;
         }
-        
+
         .reply-indicator {
             font-size: 12px;
             color: #888;
@@ -219,7 +225,7 @@ if ($selected_contact_id > 0) {
             border-left: 2px solid currentColor;
             opacity: 0.8;
         }
-        
+
         .reply-btn {
             background: none;
             border: none;
@@ -232,15 +238,15 @@ if ($selected_contact_id > 0) {
             margin-bottom: 2px;
             flex-shrink: 0;
         }
-        
+
         .message:hover .reply-btn {
             opacity: 0.6;
         }
-        
+
         .reply-btn:hover {
             opacity: 1 !important;
         }
-        
+
         .reply-context {
             display: flex;
             align-items: center;
@@ -251,13 +257,13 @@ if ($selected_contact_id > 0) {
             margin-bottom: 8px;
             border-left: 3px solid #228EE5;
         }
-        
+
         .reply-context small {
             flex: 1;
             color: #666;
             font-size: 13px;
         }
-        
+
         .clear-reply-btn {
             background: none;
             border: none;
@@ -268,17 +274,17 @@ if ($selected_contact_id > 0) {
             line-height: 1;
             flex-shrink: 0;
         }
-        
+
         .clear-reply-btn:hover {
             color: #333;
         }
-        
+
         .chat-input-wrapper {
             flex: 1;
             display: flex;
             flex-direction: column;
         }
-        
+
         .chat-input-field {
             width: 100%;
             padding: 10px 12px;
@@ -288,12 +294,26 @@ if ($selected_contact_id > 0) {
             background-color: var(--bg-input);
             color: var(--text-main);
         }
-        
+
+        /* New Style for Admin Badge */
+        .admin-badge {
+            background-color: #e50914;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 5px;
+            vertical-align: middle;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
                 transform: translateY(10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -325,7 +345,7 @@ if ($selected_contact_id > 0) {
                         <i class="fa-solid fa-magnifying-glass"></i>
                     </button>
                 </div>
-                
+
                 <div class="notification-wrapper">
                     <button class="icon-btn hover-glow" onclick="toggleNotifications()">
                         <i class="fa-solid fa-bell"></i>
@@ -358,13 +378,13 @@ if ($selected_contact_id > 0) {
         <h1 class="welcome-text">Messages</h1>
 
         <div class="chat-app-container">
-            
+
             <div class="chat-sidebar">
                 <div class="chat-sidebar-header">
                     <h3 style="margin:0;">Chats</h3>
                     <button class="icon-btn hover-glow"><i class="fa-regular fa-pen-to-square"></i></button>
                 </div>
-                
+
                 <div class="chat-search">
                     <input type="text" placeholder="Search contacts...">
                 </div>
@@ -375,7 +395,12 @@ if ($selected_contact_id > 0) {
                             <div class="contact-item <?php echo ($selected_contact_id == $contact['id']) ? 'active' : ''; ?>">
                                 <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($contact['username']); ?>&background=0D8ABC&color=fff" class="contact-avatar">
                                 <div class="contact-info">
-                                    <h4><?php echo htmlspecialchars($contact['username']); ?></h4>
+                                    <h4 style="display:flex; align-items:center;">
+                                        <?php echo htmlspecialchars($contact['username']); ?>
+                                        <?php if (isset($contact['role']) && $contact['role'] === 'admin'): ?>
+                                            <span class="admin-badge">Admin</span>
+                                        <?php endif; ?>
+                                    </h4>
                                     <p>Last message...</p>
                                 </div>
                             </div>
@@ -466,42 +491,42 @@ if ($selected_contact_id > 0) {
 
             // Send message via AJAX
             fetch('Chat.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'send_message=1&message=' + encodeURIComponent(text) + '&receiver_id=' + receiverId + (replyToId ? '&reply_to_id=' + replyToId : '')
-            })
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    // Clear Input & Scroll
-                    input.value = "";
-                    clearReply();
-                    msgContainer.scrollTop = msgContainer.scrollHeight;
-                    
-                    // Refresh messages from other user
-                    refreshMessages();
-                } else {
-                    alert('Failed to send message: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error sending message');
-            });
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'send_message=1&message=' + encodeURIComponent(text) + '&receiver_id=' + receiverId + (replyToId ? '&reply_to_id=' + replyToId : '')
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Clear Input & Scroll
+                        input.value = "";
+                        clearReply();
+                        msgContainer.scrollTop = msgContainer.scrollHeight;
+
+                        // Refresh messages from other user
+                        refreshMessages();
+                    } else {
+                        alert('Failed to send message: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error sending message');
+                });
         }
-        
+
         function setReplyTo(messageId) {
             document.getElementById('replyToId').value = messageId;
             document.getElementById('replyMsgId').textContent = '#' + messageId;
             document.getElementById('replyContext').style.display = 'flex';
             document.getElementById('msgInput').focus();
         }
-        
+
         function clearReply() {
             document.getElementById('replyToId').value = '';
             document.getElementById('replyContext').style.display = 'none';
@@ -511,55 +536,55 @@ if ($selected_contact_id > 0) {
 
         function refreshMessages(forceRebuild = false) {
             if (!receiverId) return;
-            
+
             fetch('Chat.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'get_messages=1&contact_id=' + receiverId
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && msgContainer) {
-                    const currentMessages = msgContainer.querySelectorAll('.message');
-                    // Rebuild on initial load (forceRebuild) or when there are new messages
-                    if (forceRebuild || data.messages.length > currentMessages.length) {
-                        // Rebuild message container with new messages
-                        msgContainer.innerHTML = '';
-                        data.messages.forEach(msg => {
-                            const msgDiv = document.createElement('div');
-                            msgDiv.classList.add('message', msg.sender_id == userId ? 'sent' : 'received');
-                            msgDiv.setAttribute('data-message-id', msg.message_id);
-                            
-                            const bubble = document.createElement('div');
-                            bubble.classList.add('message-bubble');
-                            
-                            let bubbleHTML = '';
-                            if (msg.is_reply) {
-                                bubbleHTML += '<div class="reply-indicator">↳ Replying to message #' + msg.reply_to + '</div>';
-                            }
-                            bubbleHTML += msg.message + ' <span class="msg-time">' + msg.time + '</span>';
-                            bubble.innerHTML = bubbleHTML;
-                            
-                            msgDiv.appendChild(bubble);
-                            
-                            // Add reply button
-                            const replyBtn = document.createElement('button');
-                            replyBtn.type = 'button';
-                            replyBtn.classList.add('reply-btn');
-                            replyBtn.setAttribute('onclick', 'setReplyTo(' + msg.message_id + ')');
-                            replyBtn.setAttribute('title', 'Reply');
-                            replyBtn.innerHTML = '<i class="fa-solid fa-reply"></i>';
-                            msgDiv.appendChild(replyBtn);
-                            
-                            msgContainer.appendChild(msgDiv);
-                        });
-                        msgContainer.scrollTop = msgContainer.scrollHeight;
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'get_messages=1&contact_id=' + receiverId
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && msgContainer) {
+                        const currentMessages = msgContainer.querySelectorAll('.message');
+                        // Rebuild on initial load (forceRebuild) or when there are new messages
+                        if (forceRebuild || data.messages.length > currentMessages.length) {
+                            // Rebuild message container with new messages
+                            msgContainer.innerHTML = '';
+                            data.messages.forEach(msg => {
+                                const msgDiv = document.createElement('div');
+                                msgDiv.classList.add('message', msg.sender_id == userId ? 'sent' : 'received');
+                                msgDiv.setAttribute('data-message-id', msg.message_id);
+
+                                const bubble = document.createElement('div');
+                                bubble.classList.add('message-bubble');
+
+                                let bubbleHTML = '';
+                                if (msg.is_reply) {
+                                    bubbleHTML += '<div class="reply-indicator">↳ Replying to message #' + msg.reply_to + '</div>';
+                                }
+                                bubbleHTML += msg.message + ' <span class="msg-time">' + msg.time + '</span>';
+                                bubble.innerHTML = bubbleHTML;
+
+                                msgDiv.appendChild(bubble);
+
+                                // Add reply button
+                                const replyBtn = document.createElement('button');
+                                replyBtn.type = 'button';
+                                replyBtn.classList.add('reply-btn');
+                                replyBtn.setAttribute('onclick', 'setReplyTo(' + msg.message_id + ')');
+                                replyBtn.setAttribute('title', 'Reply');
+                                replyBtn.innerHTML = '<i class="fa-solid fa-reply"></i>';
+                                msgDiv.appendChild(replyBtn);
+
+                                msgContainer.appendChild(msgDiv);
+                            });
+                            msgContainer.scrollTop = msgContainer.scrollHeight;
+                        }
                     }
-                }
-            })
-            .catch(error => console.error('Refresh error:', error));
+                })
+                .catch(error => console.error('Refresh error:', error));
         }
 
         // Auto-refresh messages every 2 seconds when chat is open

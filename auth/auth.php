@@ -7,131 +7,153 @@
     <title>Login & Register - MSP</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: 'Segoe UI', sans-serif;
-    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
 
-    body {
-        background: linear-gradient(rgba(2, 11, 31, 0.8), rgba(2, 11, 31, 0.8)),
-            url('https://images.unsplash.com/photo-1574267432553-4b4628081c31?q=80&w=2000');
-        background-size: cover;
-        background-position: center;
-        height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        color: white;
-    }
+        body {
+            background: linear-gradient(rgba(2, 11, 31, 0.8), rgba(2, 11, 31, 0.8)),
+                url('https://images.unsplash.com/photo-1574267432553-4b4628081c31?q=80&w=2000');
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
 
-    .navbar {
-        position: fixed;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        top: 0;
-        left: 0;
-        width: 100%;
-        padding: 20px 5%;
-        z-index: 100;
-    }
+        .navbar {
+            position: fixed;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px 5%;
+            z-index: 100;
+        }
 
-    .auth-container {
-        background: rgba(0, 0, 0, 0.75);
-        padding: 60px;
-        border-radius: 8px;
-        width: 100%;
-        max-width: 450px;
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
-    }
+        .auth-container {
+            background: rgba(0, 0, 0, 0.75);
+            padding: 60px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        }
 
-    h2 {
-        font-size: 32px;
-        margin-bottom: 28px;
-        font-weight: 600;
-    }
+        h2 {
+            font-size: 32px;
+            margin-bottom: 28px;
+            font-weight: 600;
+        }
 
-    .input-group {
-        margin-bottom: 16px;
-        position: relative;
-    }
+        .input-group {
+            margin-bottom: 16px;
+            position: relative;
+        }
 
-    .input-group input {
-        width: 100%;
-        padding: 16px 20px;
-        background: #333;
-        border: none;
-        border-radius: 4px;
-        color: white;
-        font-size: 16px;
-        outline: none;
-    }
+        .input-group input {
+            width: 100%;
+            padding: 16px 20px;
+            background: #333;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 16px;
+            outline: none;
+        }
 
-    .input-group input:focus {
-        background: #454545;
-    }
+        .input-group input:focus {
+            background: #454545;
+        }
 
-    .btn-auth {
-        width: 100%;
-        padding: 16px;
-        background: #e50914;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        font-size: 16px;
-        font-weight: bold;
-        cursor: pointer;
-        margin-top: 24px;
-        transition: 0.3s;
-    }
+        .btn-auth {
+            width: 100%;
+            padding: 16px;
+            background: #e50914;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 24px;
+            transition: 0.3s;
+        }
 
-    .btn-auth:hover {
-        background: #ff0a16;
-    }
+        .btn-auth:hover {
+            background: #ff0a16;
+        }
 
-    /* New style for the secondary button */
-    .btn-secondary {
-        background: transparent;
-        border: 1px solid #888;
-        color: #ccc;
-        margin-top: 15px;
-    }
+        /* New style for the secondary button */
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid #888;
+            color: #ccc;
+            margin-top: 15px;
+        }
 
-    .btn-secondary:hover {
-        border-color: white;
-        color: white;
-        background: rgba(255, 255, 255, 0.1);
-    }
+        .btn-secondary:hover {
+            border-color: white;
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
 
-    .auth-footer {
-        margin-top: 20px;
-        color: #b3b3b3;
-        font-size: 15px;
-    }
+        .auth-footer {
+            margin-top: 20px;
+            color: #b3b3b3;
+            font-size: 15px;
+        }
 
-    .auth-footer span {
-        color: white;
-        cursor: pointer;
-        font-weight: 500;
-    }
+        .auth-footer span {
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+        }
 
-    .auth-footer span:hover {
-        text-decoration: underline;
-    }
+        .auth-footer span:hover {
+            text-decoration: underline;
+        }
 
-    .help-flex {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 10px;
-        font-size: 13px;
-        color: #b3b3b3;
-    }
+        .help-flex {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 13px;
+            color: #b3b3b3;
+        }
 
-    #register-form {
-        display: none;
-    }
+        #register-form {
+            display: none;
+        }
+
+        /* --- ADDED: Error Alert Styles --- */
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .alert-error {
+            background: rgba(232, 124, 3, 0.2);
+            /* Orange tint */
+            border: 1px solid #e87c03;
+            color: #ffa00a;
+        }
+
+        .alert-danger {
+            background: rgba(255, 77, 77, 0.2);
+            border: 1px solid #ff4d4d;
+            color: #ff4d4d;
+        }
     </style>
 </head>
 
@@ -152,6 +174,24 @@
 
         <div id="login-form">
             <h2>Sign In</h2>
+
+            <?php
+            if (isset($_GET['error'])) {
+                $err = $_GET['error'];
+                if ($err == 'account_pending') {
+                    echo '<div class="alert alert-error">Account pending admin approval.</div>';
+                } elseif ($err == 'wrong_password') {
+                    echo '<div class="alert alert-danger">Incorrect password. Please try again.</div>';
+                } elseif ($err == 'no_user') {
+                    echo '<div class="alert alert-danger">No account found with that email.</div>';
+                } elseif ($err == 'empty_fields') {
+                    echo '<div class="alert alert-danger">Please fill in all fields.</div>';
+                } elseif ($err == 'sql_error') {
+                    echo '<div class="alert alert-danger">System error. Please try again later.</div>';
+                }
+            }
+            ?>
+
             <form action="../actions/login_process.php" method="POST">
                 <div class="input-group">
                     <input type="email" name="email" placeholder="Email address" required>
@@ -190,8 +230,6 @@
                 <button type="submit" class="btn-auth">Get Started</button>
             </form>
 
-
-
             <div class="auth-footer">
                 Already have an account? <span onclick="toggleAuth()">Sign in.</span>
             </div>
@@ -199,18 +237,18 @@
     </div>
 
     <script>
-    function toggleAuth() {
-        const login = document.getElementById('login-form');
-        const register = document.getElementById('register-form');
+        function toggleAuth() {
+            const login = document.getElementById('login-form');
+            const register = document.getElementById('register-form');
 
-        if (login.style.display === "none") {
-            login.style.display = "block";
-            register.style.display = "none";
-        } else {
-            login.style.display = "none";
-            register.style.display = "block";
+            if (login.style.display === "none") {
+                login.style.display = "block";
+                register.style.display = "none";
+            } else {
+                login.style.display = "none";
+                register.style.display = "block";
+            }
         }
-    }
     </script>
 </body>
 
