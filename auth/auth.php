@@ -1,103 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login & Register - MSP</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; }
-        
-        body {
-            background: linear-gradient(rgba(2, 11, 31, 0.8), rgba(2, 11, 31, 0.8)), 
-                        url('https://images.unsplash.com/photo-1574267432553-4b4628081c31?q=80&w=2000');
-            background-size: cover;
-            background-position: center;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-        }
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', sans-serif;
+    }
 
-        .navbar {
-            position: fixed;
-            top: 0; left: 0; width: 100%;
-            padding: 20px 5%;
-            z-index: 100;
-        }
+    body {
+        background: linear-gradient(rgba(2, 11, 31, 0.8), rgba(2, 11, 31, 0.8)),
+            url('https://images.unsplash.com/photo-1574267432553-4b4628081c31?q=80&w=2000');
+        background-size: cover;
+        background-position: center;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+    }
 
-        .auth-container {
-            background: rgba(0, 0, 0, 0.75);
-            padding: 60px;
-            border-radius: 8px;
-            width: 100%;
-            max-width: 450px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-        }
+    .navbar {
+        position: fixed;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        top: 0;
+        left: 0;
+        width: 100%;
+        padding: 20px 5%;
+        z-index: 100;
+    }
 
-        h2 { font-size: 32px; margin-bottom: 28px; font-weight: 600; }
-        .input-group { margin-bottom: 16px; position: relative; }
-        .input-group input {
-            width: 100%;
-            padding: 16px 20px;
-            background: #333;
-            border: none;
-            border-radius: 4px;
-            color: white;
-            font-size: 16px;
-            outline: none;
-        }
-        .input-group input:focus { background: #454545; }
+    .auth-container {
+        background: rgba(0, 0, 0, 0.75);
+        padding: 60px;
+        border-radius: 8px;
+        width: 100%;
+        max-width: 450px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    }
 
-        .btn-auth {
-            width: 100%;
-            padding: 16px;
-            background: #e50914;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 24px;
-            transition: 0.3s;
-        }
-        .btn-auth:hover { background: #ff0a16; }
+    h2 {
+        font-size: 32px;
+        margin-bottom: 28px;
+        font-weight: 600;
+    }
 
-        .auth-footer {
-            margin-top: 20px;
-            color: #b3b3b3;
-            font-size: 15px;
-        }
-        .auth-footer span {
-            color: white;
-            cursor: pointer;
-            font-weight: 500;
-        }
-        .auth-footer span:hover { text-decoration: underline; }
+    .input-group {
+        margin-bottom: 16px;
+        position: relative;
+    }
 
-        .help-flex {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
-            font-size: 13px;
-            color: #b3b3b3;
-        }
+    .input-group input {
+        width: 100%;
+        padding: 16px 20px;
+        background: #333;
+        border: none;
+        border-radius: 4px;
+        color: white;
+        font-size: 16px;
+        outline: none;
+    }
 
-        #register-form { display: none; }
+    .input-group input:focus {
+        background: #454545;
+    }
+
+    .btn-auth {
+        width: 100%;
+        padding: 16px;
+        background: #e50914;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 24px;
+        transition: 0.3s;
+    }
+
+    .btn-auth:hover {
+        background: #ff0a16;
+    }
+
+    /* New style for the secondary button */
+    .btn-secondary {
+        background: transparent;
+        border: 1px solid #888;
+        color: #ccc;
+        margin-top: 15px;
+    }
+
+    .btn-secondary:hover {
+        border-color: white;
+        color: white;
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .auth-footer {
+        margin-top: 20px;
+        color: #b3b3b3;
+        font-size: 15px;
+    }
+
+    .auth-footer span {
+        color: white;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .auth-footer span:hover {
+        text-decoration: underline;
+    }
+
+    .help-flex {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 10px;
+        font-size: 13px;
+        color: #b3b3b3;
+    }
+
+    #register-form {
+        display: none;
+    }
     </style>
 </head>
+
 <body>
 
     <nav class="navbar">
-        <a href="../viewer/index.php">
+        <a href="../index.php">
             <img src="../assets/logo.png" style="height:40px;" alt="MSP">
+        </a>
+        <a href="prodRegister.php" style="text-decoration: none;">
+            <button type="button" class="btn-auth btn-secondary">
+                Register as Producer
+            </button>
         </a>
     </nav>
 
     <div class="auth-container">
-        
+
         <div id="login-form">
             <h2>Sign In</h2>
             <form action="../actions/login_process.php" method="POST">
@@ -124,7 +176,7 @@
                 <div class="input-group">
                     <input type="text" name="full_name" placeholder="Full Name" required>
                 </div>
-                
+
                 <div class="input-group">
                     <input type="text" name="username" placeholder="Username" required>
                 </div>
@@ -137,25 +189,29 @@
                 </div>
                 <button type="submit" class="btn-auth">Get Started</button>
             </form>
+
+
+
             <div class="auth-footer">
                 Already have an account? <span onclick="toggleAuth()">Sign in.</span>
             </div>
         </div>
     </div>
 
-   <script>
-        function toggleAuth() {
-            const login = document.getElementById('login-form');
-            const register = document.getElementById('register-form');
-            
-            if (login.style.display === "none") {
-                login.style.display = "block";
-                register.style.display = "none";
-            } else {
-                login.style.display = "none";
-                register.style.display = "block";
-            }
+    <script>
+    function toggleAuth() {
+        const login = document.getElementById('login-form');
+        const register = document.getElementById('register-form');
+
+        if (login.style.display === "none") {
+            login.style.display = "block";
+            register.style.display = "none";
+        } else {
+            login.style.display = "none";
+            register.style.display = "block";
         }
+    }
     </script>
 </body>
+
 </html>

@@ -192,3 +192,49 @@ CREATE TABLE chat_messages (
     FOREIGN KEY (sender_id) REFERENCES users(user_id),
     FOREIGN KEY (receiver_id) REFERENCES users(user_id)
 );
+
+
+-- ==========================================
+--Updates--
+1. ALTER TABLE series ADD COLUMN price DECIMAL(10, 2) DEFAULT 0.00 AFTER is_premium;
+
+2. ALTER TABLE watch_history 
+    ADD COLUMN progress_seconds DECIMAL(10, 2) DEFAULT 0.00 AFTER content_type;
+
+3. CREATE TABLE IF NOT EXISTS reviews (
+    review_id INT AUTO_INCREMENT PRIMARY KEY,
+    movie_id INT NOT NULL,
+    user_id INT NOT NULL,
+    username VARCHAR(50),
+    rating INT,
+    comment TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (movie_id) REFERENCES movies(movie_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+    );
+
+4. -- 1. Create Series Reviews Table (if not exists)
+    CREATE TABLE IF NOT EXISTS series_reviews (
+        review_id INT AUTO_INCREMENT PRIMARY KEY,
+        series_id INT NOT NULL,
+        user_id INT NOT NULL,
+        username VARCHAR(50),
+        rating INT,
+        comment TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (series_id) REFERENCES series(series_id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+    );
+
+    -- 2. Update Watch History ENUM to support 'series' (Important for tracking)
+    ALTER TABLE watch_history MODIFY COLUMN content_type ENUM('movie', 'episode', 'series') NOT NULL;
+
+5.  CREATE TABLE purchases (
+    purchase_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    content_type ENUM('movie', 'series') NOT NULL,
+    content_id INT NOT NULL,
+    price DECIMAL(10,2) NOT NULL,
+    purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+    );
