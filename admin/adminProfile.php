@@ -91,14 +91,14 @@ $res_g = $stmt_g->get_result();
 
 $total_genre_count = 0;
 $genre_data = [];
-while($row = $res_g->fetch_assoc()) {
+while ($row = $res_g->fetch_assoc()) {
     // Handle comma-separated genres if necessary, assuming single genre for simplicity or primary one
-    $g_name = trim(explode(',', $row['genre'])[0]); 
-    if(!isset($genre_data[$g_name])) $genre_data[$g_name] = 0;
+    $g_name = trim(explode(',', $row['genre'])[0]);
+    if (!isset($genre_data[$g_name])) $genre_data[$g_name] = 0;
     $genre_data[$g_name] += $row['count'];
     $total_genre_count += $row['count'];
 }
-arsort($genre_data); // Sort mostly watched first
+arsort($genre_data);
 
 // 6. FETCH RECENTLY WATCHED
 $sql_recent = "
@@ -200,21 +200,21 @@ $recent_watched = $stmt_r->get_result();
         <section class="section-container blue-border">
             <div class="section-tab">Watching Habits</div>
             <div class="habit-container">
-                <?php if($total_genre_count > 0): ?>
-                    <?php 
+                <?php if ($total_genre_count > 0): ?>
+                    <?php
                     $count = 0;
-                    foreach($genre_data as $genre => $val): 
-                        if($count >= 4) break; // Limit to top 4 genres
+                    foreach ($genre_data as $genre => $val):
+                        if ($count >= 4) break; // Limit to top 4 genres
                         $percent = round(($val / $total_genre_count) * 100);
                         $count++;
                     ?>
-                    <div class="habit-item">
-                        <div class="habit-label"><?php echo htmlspecialchars($genre); ?></div>
-                        <div class="habit-bar-bg">
-                            <div class="habit-bar-fill" style="width: <?php echo $percent; ?>%;"></div>
+                        <div class="habit-item">
+                            <div class="habit-label"><?php echo htmlspecialchars($genre); ?></div>
+                            <div class="habit-bar-bg">
+                                <div class="habit-bar-fill" style="width: <?php echo $percent; ?>%;"></div>
+                            </div>
+                            <div class="habit-value"><?php echo $percent; ?>%</div>
                         </div>
-                        <div class="habit-value"><?php echo $percent; ?>%</div>
-                    </div>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <p style="color:#666; padding:20px;">No watch history data available yet.</p>
@@ -226,11 +226,11 @@ $recent_watched = $stmt_r->get_result();
             <div class="section-tab">Recently Watched</div>
 
             <div class="movie-grid" style="margin-top: 20px;">
-                <?php if($recent_watched->num_rows > 0): ?>
-                    <?php while($item = $recent_watched->fetch_assoc()): ?>
-                        <?php 
-                            $poster = !empty($item['poster_url']) ? "../".$item['poster_url'] : '../assets/logo.png';
-                            $dateStr = date("M d", strtotime($item['last_watched_at']));
+                <?php if ($recent_watched->num_rows > 0): ?>
+                    <?php while ($item = $recent_watched->fetch_assoc()): ?>
+                        <?php
+                        $poster = !empty($item['poster_url']) ? "../" . $item['poster_url'] : '../assets/logo.png';
+                        $dateStr = date("M d", strtotime($item['last_watched_at']));
                         ?>
                         <div class="movie-card">
                             <img src="<?php echo $poster; ?>" alt="Poster" class="movie-poster">
@@ -256,4 +256,5 @@ $recent_watched = $stmt_r->get_result();
     </footer>
     <script src="../assets/notification.js"></script>
 </body>
+
 </html>

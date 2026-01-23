@@ -237,7 +237,6 @@ function time_elapsed_string($datetime, $full = false)
     function toggleCommentSection(element) {
       const card = element.closest('.post-card');
       const section = card.querySelector('.comment-section');
-      // Toggle logic using CSS classes is preferred, but simple JS display toggle is standard here
       if (section.style.display === 'none' || section.style.display === '') {
         section.style.display = 'block';
       } else {

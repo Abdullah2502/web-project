@@ -206,10 +206,28 @@ $avatar_url = "https://ui-avatars.com/api/?name=" . urlencode($display_name) . "
                 <?php if ($role === 'producer'): ?>
                     <hr style="border: 0; border-top: 1px solid #1f2940; margin: 30px 0;">
                     <h3 style="font-size: 16px; margin-bottom: 15px; color:#ccc;">Company Information</h3>
+
                     <div class="input-row">
-                        <input type="text" class="input-field" value="<?php echo htmlspecialchars($profile_data['company_name'] ?? 'N/A'); ?>" readonly style="background:#060b18;">
-                        <input type="text" class="input-field" value="<?php echo htmlspecialchars($profile_data['license_number'] ?? 'N/A'); ?>" readonly style="background:#060b18;">
-                        <input type="text" class="input-field" value="<?php echo htmlspecialchars($profile_data['website'] ?? 'N/A'); ?>" readonly style="background:#060b18;">
+                        <input type="text" class="input-field" value="<?php echo htmlspecialchars($profile_data['company_name'] ?? 'N/A'); ?>" readonly style="background:#060b18;" placeholder="Company Name">
+                        <input type="text" class="input-field" value="<?php echo htmlspecialchars($profile_data['license_number'] ?? 'N/A'); ?>" readonly style="background:#060b18;" placeholder="License Number">
+                        <input type="text" class="input-field" value="<?php echo htmlspecialchars($profile_data['website'] ?? 'N/A'); ?>" readonly style="background:#060b18;" placeholder="Website">
+                    </div>
+
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(34, 142, 229, 0.05); border: 1px solid #1f2940; border-radius: 8px;">
+                        <h4 style="font-size: 14px; margin-bottom: 10px; color:#ccc;">Verification Document</h4>
+                        <?php if (!empty($profile_data['document_path'])): ?>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <i class="fa-solid fa-file-contract" style="color: #228EE5; font-size: 24px;"></i>
+                                <div>
+                                    <p style="color: #fff; margin: 0 0 5px 0; font-size: 13px;">License/Registration File</p>
+                                    <a href="../<?php echo htmlspecialchars($profile_data['document_path']); ?>" target="_blank" style="color: #228EE5; font-size: 13px; text-decoration: none; border-bottom: 1px dashed #228EE5;" class="hover-glow">
+                                        View Document <i class="fa-solid fa-external-link-alt" style="font-size: 10px; margin-left: 3px;"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        <?php else: ?>
+                            <p style="color: #777; font-size: 13px; margin: 0;"><i class="fa-solid fa-circle-exclamation"></i> No verification document uploaded.</p>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
 
