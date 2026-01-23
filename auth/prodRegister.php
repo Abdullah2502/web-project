@@ -14,67 +14,106 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = $_POST['password'];
     $company_name = $conn->real_escape_string($_POST['company_name']);
     $license_number = $conn->real_escape_string($_POST['license_number']);
-    $website = $conn->real_escape_string($_POST['website']);
+    $website = !empty($_POST['website']) ? $conn->real_escape_string($_POST['website']) : '';
 
-    // 2. Check for duplicate Email/Username
-    $check = "SELECT * FROM users WHERE email='$email' OR username='$username'";
-    $rs = $conn->query($check);
-
-    if ($rs->num_rows > 0) {
-        $errorMsg = "Username or Email already taken!";
+    // 2. Validate inputs
+    if (empty($username) || empty($email) || empty($password) || empty($company_name) || empty($license_number)) {
+        $errorMsg = "All required fields must be filled!";
+    } else if (strlen($password) < 6) {
+        $errorMsg = "Password must be at least 6 characters!";
+    } else if (empty($_FILES['document']['name'])) {
+        $errorMsg = "Verification document is required!";
     } else {
-        // 3. Handle File Upload (Verification Document)
-        $upload_dir = '../uploads/documents/';
-        
-        // Create directory if it doesn't exist
-        if (!is_dir($upload_dir)) {
-            mkdir($upload_dir, 0777, true);
-        }
+        // 3. Check for duplicate Email/Username
+        $check = "SELECT * FROM users WHERE email='$email' OR username='$username'";
+        $rs = $conn->query($check);
 
-        $file_name = time() . '_' . basename($_FILES['document']['name']);
-        $target_file = $upload_dir . $file_name;
-        $file_type = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
-
-        // Validate file type
-        $allowed_types = ['pdf', 'jpg', 'jpeg', 'png'];
-        if (!in_array($file_type, $allowed_types)) {
-            $errorMsg = "Invalid file type! Only PDF, JPG, JPEG, & PNG allowed.";
+        if ($rs->num_rows > 0) {
+            $errorMsg = "Username or Email already taken!";
         } else {
-            if (move_uploaded_file($_FILES['document']['tmp_name'], $target_file)) {
-                // File upload success, proceed to DB
+            // 4. Handle File Upload (Verification Document)
+            // Use absolute path from project root - go up from auth/ to project root
+            $project_root = dirname(dirname(__FILE__)); // Goes from /auth/prodRegister.php to /web-project/
+            $upload_dir = $project_root . '/uploads/documents/';
+            
+            // Create directory if it doesn't exist
+            if (!is_dir($upload_dir)) {
+                // First try to create with 0777 permissions
+                $dir_created = @mkdir($upload_dir, 0777, true);
                 
-                // 4. Hash Password
-                $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+                if (!$dir_created && !is_dir($upload_dir)) {
+                    // If creation failed, try with less restrictive permissions
+                    $dir_created = @mkdir($upload_dir, 0755, true);
+                }
+                
+                if (!$dir_created && !is_dir($upload_dir)) {
+                    $errorMsg = "Failed to create upload directory. Please contact administrator.";
+                }
+            }
 
-                // 5. Insert into USERS table
-                // Role is 'producer', is_active defaults to 1
-                $sql_user = "INSERT INTO users (username, email, password_hash, role, is_active) 
-                             VALUES ('$username', '$email', '$hashed_password', 'producer', 1)";
+            if (empty($errorMsg)) {
+                $file_name = time() . '_' . basename($_FILES['document']['name']);
+                $target_file = $upload_dir . $file_name;
+                $file_type = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
 
-                if ($conn->query($sql_user) === TRUE) {
-                    $new_user_id = $conn->insert_id;
-
-                    // 6. Insert into PRODUCERS table
-                    // Save relative path for the document
-                    $db_doc_path = 'uploads/documents/' . $file_name;
+                // Validate file type
+                $allowed_types = ['pdf', 'jpg', 'jpeg', 'png'];
+                if (!in_array($file_type, $allowed_types)) {
+                    $errorMsg = "Invalid file type! Only PDF, JPG, JPEG, & PNG allowed.";
+                } else if ($_FILES['document']['size'] > 5242880) { // 5MB limit
+                    $errorMsg = "File size exceeds 5MB limit!";
+                } else if (move_uploaded_file($_FILES['document']['tmp_name'], $target_file)) {
+                    // File upload success, proceed to DB
                     
-                    $sql_producer = "INSERT INTO producers (user_id, company_name, license_number, document_path, website, verification_status) 
-                                     VALUES ('$new_user_id', '$company_name', '$license_number', '$db_doc_path', '$website', 'pending')";
+                    // 5. Hash Password
+                    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-                    if ($conn->query($sql_producer) === TRUE) {
-                        // Optional: Initialize Wallet
-                        $conn->query("INSERT INTO wallets (user_id, balance) VALUES ('$new_user_id', 0.00)");
+                    // 6. Insert into USERS table with prepared statement (security)
+                    $sql_user = "INSERT INTO users (username, email, password_hash, role, is_active) 
+                                 VALUES (?, ?, ?, 'producer', 1)";
+                    $stmt = $conn->prepare($sql_user);
+                    if ($stmt) {
+                        $stmt->bind_param("sss", $username, $email, $hashed_password);
+                        if ($stmt->execute()) {
+                            $new_user_id = $conn->insert_id;
 
-                        echo "<script>alert('Registration Successful! Your account is pending verification.'); window.location.href='auth.php';</script>";
-                        exit();
+                            // 7. Insert into PRODUCERS table
+                            $db_doc_path = 'uploads/documents/' . $file_name;
+                            
+                            $sql_producer = "INSERT INTO producers (user_id, company_name, license_number, document_path, website, verification_status) 
+                                             VALUES (?, ?, ?, ?, ?, 'pending')";
+                            $stmt2 = $conn->prepare($sql_producer);
+                            if ($stmt2) {
+                                $stmt2->bind_param("issss", $new_user_id, $company_name, $license_number, $db_doc_path, $website);
+                                if ($stmt2->execute()) {
+                                    // 8. Initialize Wallet
+                                    $sql_wallet = "INSERT INTO wallets (user_id, balance) VALUES (?, 0.00)";
+                                    $stmt3 = $conn->prepare($sql_wallet);
+                                    if ($stmt3) {
+                                        $stmt3->bind_param("i", $new_user_id);
+                                        $stmt3->execute();
+                                        $stmt3->close();
+                                    }
+
+                                    echo "<script>alert('Registration Successful! Your account is pending verification.'); window.location.href='auth.php';</script>";
+                                    exit();
+                                } else {
+                                    $errorMsg = "Error inserting producer profile: " . $stmt2->error;
+                                }
+                                $stmt2->close();
+                            } else {
+                                $errorMsg = "Database error: " . $conn->error;
+                            }
+                        } else {
+                            $errorMsg = "Error creating user: " . $stmt->error;
+                        }
+                        $stmt->close();
                     } else {
-                        $errorMsg = "Error inserting producer profile: " . $conn->error;
+                        $errorMsg = "Database error: " . $conn->error;
                     }
                 } else {
-                    $errorMsg = "Error creating user: " . $conn->error;
+                    $errorMsg = "Error uploading file. Please try again.";
                 }
-            } else {
-                $errorMsg = "Error uploading file. Please try again.";
             }
         }
     }

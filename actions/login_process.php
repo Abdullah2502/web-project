@@ -42,8 +42,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         break;
                         
                     case 'producer':
-                        // Assuming you might rename this to .php later, but linking to .html as requested
-                        header("Location: ../producer/producerPage.html"); 
+                        header("Location: ../producer/Dashboard.php");
                         break;
                         
                     case 'viewer':
