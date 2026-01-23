@@ -89,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Get list of contacts (other producers)
 $contacts = [];
-$contacts_query = "SELECT u.id, u.username FROM users u WHERE u.role = 'producer' AND u.id != $user_id ORDER BY u.username ASC LIMIT 20";
+$contacts_query = "SELECT u.user_id as id, u.username FROM users u WHERE u.role = 'producer' AND u.user_id != $user_id ORDER BY u.username ASC LIMIT 20";
 $contacts_result = mysqli_query($conn, $contacts_query);
 if ($contacts_result) {
     while ($row = mysqli_fetch_assoc($contacts_result)) {
@@ -105,7 +105,7 @@ $contact_name = '';
 if ($selected_contact_id > 0) {
     // Get contact name
     $contact_name = '';
-    $contact_name_query = "SELECT username FROM users WHERE id = $selected_contact_id LIMIT 1";
+    $contact_name_query = "SELECT username FROM users WHERE user_id = $selected_contact_id LIMIT 1";
     $contact_name_result = mysqli_query($conn, $contact_name_query);
     if ($contact_name_result && $row = mysqli_fetch_assoc($contact_name_result)) {
         $contact_name = htmlspecialchars($row['username']);
@@ -156,6 +156,150 @@ if ($selected_contact_id > 0) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="../assets/theme.js"></script>
     <script src="../assets/notification.js"></script>
+    <style>
+        .message {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            margin-bottom: 10px;
+            animation: fadeIn 0.2s ease-out;
+        }
+        
+        .message.received {
+            justify-content: flex-start;
+        }
+        
+        .message.sent {
+            justify-content: flex-end;
+        }
+        
+        .message-bubble {
+            max-width: 70%;
+            min-width: 120px;
+            min-height: 32px;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.4;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: pre-wrap;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .message.received .message-bubble {
+            background-color: var(--bg-element);
+            color: var(--text-main);
+            border-bottom-left-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .message.sent .message-bubble {
+            background-color: var(--accent-color);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .msg-time {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-top: 4px;
+            display: block;
+            text-align: right;
+        }
+        
+        .reply-indicator {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 6px;
+            font-style: italic;
+            padding-left: 8px;
+            border-left: 2px solid currentColor;
+            opacity: 0.8;
+        }
+        
+        .reply-btn {
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+            padding: 4px 8px;
+            font-size: 13px;
+            margin-bottom: 2px;
+            flex-shrink: 0;
+        }
+        
+        .message:hover .reply-btn {
+            opacity: 0.6;
+        }
+        
+        .reply-btn:hover {
+            opacity: 1 !important;
+        }
+        
+        .reply-context {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: rgba(34, 142, 229, 0.1);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border-left: 3px solid #228EE5;
+        }
+        
+        .reply-context small {
+            flex: 1;
+            color: #666;
+            font-size: 13px;
+        }
+        
+        .clear-reply-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #999;
+            font-size: 18px;
+            padding: 0;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        
+        .clear-reply-btn:hover {
+            color: #333;
+        }
+        
+        .chat-input-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-input-field {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            font-size: 14px;
+            background-color: var(--bg-input);
+            color: var(--text-main);
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -363,7 +507,9 @@ if ($selected_contact_id > 0) {
             document.getElementById('replyContext').style.display = 'none';
         }
 
-        function refreshMessages() {
+        let isInitialLoad = true;
+
+        function refreshMessages(forceRebuild = false) {
             if (!receiverId) return;
             
             fetch('Chat.php', {
@@ -377,8 +523,8 @@ if ($selected_contact_id > 0) {
             .then(data => {
                 if (data.success && msgContainer) {
                     const currentMessages = msgContainer.querySelectorAll('.message');
-                    // Only refresh if new messages (more than current)
-                    if (data.messages.length > currentMessages.length) {
+                    // Rebuild on initial load (forceRebuild) or when there are new messages
+                    if (forceRebuild || data.messages.length > currentMessages.length) {
                         // Rebuild message container with new messages
                         msgContainer.innerHTML = '';
                         data.messages.forEach(msg => {
@@ -418,7 +564,9 @@ if ($selected_contact_id > 0) {
 
         // Auto-refresh messages every 2 seconds when chat is open
         if (receiverId) {
-            refreshInterval = setInterval(refreshMessages, 2000);
+            // Refresh immediately on page load to ensure correct sizing (force rebuild)
+            refreshMessages(true);
+            refreshInterval = setInterval(() => refreshMessages(false), 2000);
         }
 
         // Clean up interval when leaving page

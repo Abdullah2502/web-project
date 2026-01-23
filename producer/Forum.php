@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_comment'])) {
             $stmt->bind_param("iis", $thread_id, $user_id, $comment_text);
             $stmt->execute();
             $stmt->close();
-            header("Location: Forum.php");
+            header("Location: Forum.php?open_thread=" . $thread_id);
             exit();
         }
     }
@@ -207,6 +207,22 @@ function getAvatarColor($name)
 
     document.addEventListener('DOMContentLoaded', function () {
       renderPosts(posts);
+
+      window.addEventListener('load', function () {
+        setTimeout(() => {
+          renderPosts(posts);
+
+          const params = new URLSearchParams(window.location.search);
+          const openThread = params.get('open_thread');
+          if (openThread) {
+            const target = document.querySelector(`input[name="thread_id"][value="${openThread}"]`);
+            if (target) {
+              const section = target.closest('.post-card').querySelector('.comment-section');
+              section.style.display = 'block';
+            }
+          }
+        }, 50);
+      });
     });
 
     function renderPosts(data) {
@@ -241,11 +257,11 @@ function getAvatarColor($name)
                         </span>
                         <span class="action-item"><i class="fa-solid fa-share-nodes"></i> Share</span>
                     </div>
-                    <div class="comment-section">
-                        <div class="comment-input-area">
-                            <form method="POST" action="Forum.php" style="display: flex; gap: 10px;">
+                    <div class="comment-section" style="display:none;">
+                        <div class="comment-input-area" style="display:flex; gap:10px; padding-top:10px;">
+                            <form method="POST" action="Forum.php" style="display: flex; gap: 10px; width:100%;">
                                 <input type="hidden" name="thread_id" value="${post.thread_id}">
-                                <input type="text" name="comment_text" placeholder="Write a comment..." required style="flex: 1;">
+                                <input type="text" name="comment_text" placeholder="Write a comment..." required style="flex: 1; padding:10px; border-radius:10px; border:1px solid #ccc;">
                                 <button type="submit" name="submit_comment" class="btn-post" style="padding: 8px 15px;">Post</button>
                             </form>
                         </div>
@@ -254,16 +270,6 @@ function getAvatarColor($name)
                 </div>
             `;
         container.innerHTML += card;
-      });
-
-      // Add comment section toggle listeners
-      document.querySelectorAll('.post-card').forEach(card => {
-        const commentBtn = card.querySelector('.post-actions .action-item');
-        if (commentBtn) {
-          commentBtn.addEventListener('click', function() {
-            toggleCommentSection(this);
-          });
-        }
       });
     }
 
